@@ -7,7 +7,7 @@ class User(AbstractUser):
     username = models.CharField(max_length=100)
     email = models.EmailField(unique=True)
     full_name = models.CharField(unique=True, max_length=50)
-    otp1 = models.CharField(max_length=100, null=True, blank=True)
+    otp = models.CharField(max_length=100, null=True, blank=True)
     refresh_token = models.CharField(max_length=1000, null=True, blank=True)
 
     USERNAME_FIELD = 'email'
@@ -17,7 +17,7 @@ class User(AbstractUser):
         return self.email
 
     def save(self, *args, **kwargs):
-        email_username, full_name = self.email.split("@")
+        email_username, _ = self.email.split("@")
         if not self.full_name:
             self.full_name = email_username
         if not self.username:
