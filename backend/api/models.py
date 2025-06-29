@@ -39,7 +39,7 @@ TEACHER_STATUS = (
     ('Published','Published')
 )
 
-PLATEFORM_STAUS = (
+PLATFORM_STATUS = (
     ('Review','Review'),
     ('Disabled','Disabled'),
     ('Rejected','Rejected'),
@@ -132,11 +132,12 @@ class Course(models.Model):
     price = models.DecimalField(max_digits=12, decimal_places=2,default=0.00,blank=True)
     language = models.CharField(choices=LANGUAGE, default="English",max_length=100,null=True,blank=True)
     level = models.CharField(choices=LEVEL,default='Beginner', max_length=100, null=True,blank=True)
-    plateform_status = models.CharField(choices=PLATEFORM_STAUS,default="Published",max_length=100, null=True,blank=True)
-    techer_course_status = models.CharField(choices=TEACHER_STATUS,default="Published",max_length=100)
+    platform_status = models.CharField(choices=PLATFORM_STATUS,default="Published",max_length=100, null=True,blank=True)
+    teacher_course_status = models.CharField(choices=TEACHER_STATUS,default="Published",max_length=100)
     featured = models.BooleanField(default=False)
     course_id = ShortUUIDField(unique=True, null=True,blank=True)
     slug = models.SlugField(default=timezone.now)
+    date = models.DateTimeField(default=timezone.now)
 
     def __str__(self):
         return self.title
@@ -278,6 +279,7 @@ class CartOrder(models.Model):
     tax_fee = models.DecimalField(max_digits=12, decimal_places=2, default=0.00, blank=True, null=True)
     intial_total = models.DecimalField(max_digits=12, decimal_places=2, default=0.00, blank=True, null=True)
     saved = models.DecimalField(max_digits=12, decimal_places=2, default=0.00, blank=True, null=True)
+    total = models.DecimalField(max_digits=12, decimal_places=2, default=0.00, blank=True, null=True)
     payment_status = models.CharField(choices=PAYMENT_STATUS, default="Processing", max_length=100, null=True, blank=True)
     full_name = models.CharField(max_length=100, null=True, blank=True)
     email = models.CharField(max_length=100, null=True, blank=True)

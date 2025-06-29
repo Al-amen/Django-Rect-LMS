@@ -57,7 +57,7 @@ class UserSerializer(serializers.ModelSerializer):
 class ProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = Profile
-        fields = "__al__"
+        fields = "__all__"
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -74,7 +74,7 @@ class TeacherSerializer(serializers.ModelSerializer):
 class VariantItemSerializer(serializers.ModelSerializer):
     class Meta:
         model = api_models.VariantItem
-        fields = "__al__"
+        fields = "__all__"
     
     def __init__(self, *args, **kwargs):
         super(VariantItemSerializer,self).__init__(*args, **kwargs)
@@ -138,12 +138,12 @@ class CartSerializer(serializers.ModelSerializer):
 class CartOrderItemSerializer(serializers.ModelSerializer):
     class Meta:
         model = api_models.CartOrderItem
-        fields = '__al__'
+        fields = '__all__'
 
     
     
     def __init__(self, *args, **kwargs):
-        super(CartOrderItemSerializer, self).__init__(*args, **kwargs)
+        super(CartOrderItemSerializer, self).__init__(*args, **kwargs) 
         request = self.context.get("request")
 
         if request and request.method == "POST":
@@ -158,18 +158,19 @@ class CartOrderSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = api_models.CartOrder
-    
-    
+        fields = '__all__'
+
     def __init__(self, *args, **kwargs):
-        super(CartOrderSerializer, self).__init__(*args, **kwargs)
+        super(CartOrderSerializer, self).__init__(*args, **kwargs)  # ✅ Must be inside __init__
         request = self.context.get("request")
         if request and request.method == "POST":
-            self.Meta.depth = 0
-        
+            self.Meta.depth = 0  
         else:
             self.Meta.depth = 3
 
-class CertiFicateSerializer(serializers.ModelSerializer):
+
+
+class CertificateSerializer(serializers.ModelSerializer):
     class Meta:
         model = api_models.Certificate
         fields = '__all__'
@@ -178,11 +179,11 @@ class CertiFicateSerializer(serializers.ModelSerializer):
 class CompletedLessionSerializer(serializers.ModelSerializer):
     class Meta:
         model = api_models.CompletedLesson
-        fields = '__al__'
+        fields = '__all__'
 
     
     def __init__(self, *args, **kwargs):
-        super(CartOrderSerializer, self).__init__(*args, **kwargs)
+        super(CompletedLessionSerializer, self).__init__(*args, **kwargs)
         request = self.context.get("request")
         if request and request.method == "POST":
             self.Meta.depth = 0
@@ -203,7 +204,7 @@ class ReviewSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = api_models.Review
-        fields = '__al__'
+        fields = '__all__'
 
     def __init__(self, *args, **kwargs):
         super(ReviewSerializer, self).__init__(*args, **kwargs)
@@ -217,7 +218,7 @@ class ReviewSerializer(serializers.ModelSerializer):
     
 class NotificationSerializer(serializers.ModelSerializer):
     class Meta:
-        fields = '__al__'
+        fields = '__all__'
         model = api_models.Notification
 
 
@@ -281,7 +282,7 @@ class CourseSerializer(serializers.ModelSerializer):
     lectures = VariantItemSerializer(many=True, required=False, read_only=True,)
     reviews = ReviewSerializer(many=True, read_only=True, required=False)
     class Meta:
-        fields = ["id", "category", "teacher", "file", "image", "title", "description", "price", "language", "level", "platform_status", "teacher_course_status", "featured", "course_id", "slug", "date", "students", "curriculum", "lectures", "average_rating", "rating_count", "reviews",]
+        fields = ["id", "category", "teacher", "file", "image", "title", "description", "price", "language", "level", "platform_status", "teacher_course_status", "featured", "course_id", "slug", "date", "students", "curriculum", "lectures", "average_rating", "rating_count", "reviews"]
         model = api_models.Course
 
     def __init__(self, *args, **kwargs):
