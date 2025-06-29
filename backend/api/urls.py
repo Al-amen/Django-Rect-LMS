@@ -16,6 +16,7 @@ urlpatterns = [
     #core Endpoints
     path('course/category',views.CategoryListAPIView.as_view()),
     path('course/course-list/',views.CourseListAPIView.as_view()),
+    path("course/search/", views.SearchCourseAPIView.as_view()),
     path('course/cart/',views.CartAPIView.as_view()),
     path('course/cart-list/<cart_id>/',views.CartListAPIView.as_view()),
     path('course/cart/',views.CartAPIView.as_view()),
