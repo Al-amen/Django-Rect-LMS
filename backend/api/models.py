@@ -88,7 +88,7 @@ class Teacher(models.Model):
     def __str__(self):
         return self.full_name if self.full_name else self.user.full_name
 
-    def student(self):
+    def students(self):
         return CartOrder.objects.filter(teacher=self)
     
     def course(self):

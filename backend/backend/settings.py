@@ -65,7 +65,7 @@ ROOT_URLCONF = 'backend.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR/'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -235,8 +235,8 @@ CORS_ALLOW_ALL_ORIGINS = True
 
 
 
-MAILERSEND_API_TOKEN = env("MAILERSEND_API_TOKEN")
-MAILERSEND_SENDER_DOMAIN = env("MAILERSEND_SENDER_DOMAIN")
+MAILERSEND_API_TOKEN = "mlsn.da152fcb5d31592bbdc0d9980265b764ec954fcf42f3abe87933c94f4ddb8f6a"
+MAILERSEND_SENDER_DOMAIN = "test-3m5jgrondp0gdpyo.mlsender.net"
 
 ANYMAIL = {
     "MAILERSEND_API_TOKEN": MAILERSEND_API_TOKEN,
@@ -244,4 +244,4 @@ ANYMAIL = {
 }
 
 FROM_EMAIL=env('FROM_EMAIL')
-EMAIL_BACKEND = 'anymail.backends.mailgun.EmailBackend'
+EMAIL_BACKEND = 'anymail.backends.mailersend.EmailBackend'

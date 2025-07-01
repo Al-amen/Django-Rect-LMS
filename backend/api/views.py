@@ -6,6 +6,8 @@ from django.template.loader import render_to_string
 from django.core.mail import EmailMultiAlternatives
 from django.conf import settings
 from django.contrib.auth.hashers import check_password
+from django.shortcuts import get_object_or_404
+
 
 from api import models as api_models
 from api import serializer as api_serializer
@@ -16,7 +18,7 @@ from rest_framework import generics,status,viewsets
 from rest_framework.permissions import AllowAny,IsAuthenticated
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.response import Response
-
+from rest_framework.exceptions import PermissionDenied
 
 from rest_framework.parsers import MultiPartParser, FormParser
 from drf_yasg.utils import swagger_auto_schema
@@ -55,7 +57,7 @@ class PasswordResetEmailVerifyAPIView(generics.RetrieveAPIView):
             user.otp = generate_random_otp()
             user.save()
 
-            link = f"http://127.0.0.1:8000/create-new-password/?otp={user.otp}&uuidb64={uuidb64}&refresh_token={refresh_token}"
+            link = f"http://127.0.0.1:8000/password-change/?otp={user.otp}&uuidb64={uuidb64}&refresh_token={refresh_token}"
 
             context = {
                 "link":link,
@@ -111,7 +113,7 @@ class ChangePasswordAPIView(generics.CreateAPIView):
         user = User.objects.get(id=user_id)
 
         if user:
-            if check_password(old_password,new_password):
+            if user.check_password(old_password):
                 user.set_password(new_password)
                 user.save()
                 return Response({"message": "Password changed successfully","icon":"success"})
@@ -129,12 +131,13 @@ class ProfileAPIView(generics.RetrieveUpdateAPIView):
     permission_classes = [IsAuthenticated]
 
     def get_object(self):
-        try:
-            user_id = self.kwargs['user_id']
-            user = User.objects.get(id=user_id)
-            return Profile.objects.get(user=user)
-        except:
-            return None
+        user_id = self.kwargs.get('user_id')
+        user = self.request.user
+        print(user.id, user_id)
+        if str(user.id) != str(user_id):
+            raise PermissionDenied("You cannot access other users' profiles.")
+
+        return Profile.objects.get(user=user)
         
 
 
@@ -167,7 +170,10 @@ class TeacherCourseDetailAPIView(generics.RetrieveAPIView):
 
     def get_object(self):
         course_id = self.kwargs['course_id']
-        course = api_models.Course.get(course_id=course_id,platform_status="Published", teacher_course_status="Published")
+        from django.shortcuts import get_object_or_404
+
+        course = get_object_or_404(api_models.Course, course_id=course_id, platform_status="Published", teacher_course_status="Published")
+
         return course
     
 
@@ -194,7 +200,7 @@ class CartAPIView(generics.CreateAPIView):
             user = None
 
         try:
-            country_object = api_models.Country.objects.filter(name=country_name)
+            country_object = api_models.Country.objects.filter(name=country_name).first()
             country = country_object.name
         
         except:
@@ -359,6 +365,16 @@ class CreateOrderAPIView(generics.CreateAPIView):
         order.save()
 
         return Response({"message":"Order Created Successfully","order_oid":order.oid},status=status.HTTP_201_CREATED)
+    
+
+class CheckoutAPIView(generics.RetrieveAPIView):
+    serializer_class = api_serializer.CartOrderSerializer
+    permission_classes = [IsAuthenticated]
+    queryset = api_models.CartOrder.objects.all()
+    lookup_field = 'oid'
+
+
+
 
 
 
