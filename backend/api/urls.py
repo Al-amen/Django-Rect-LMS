@@ -25,6 +25,17 @@ urlpatterns = [
     path("course/cart-item-delete/<cart_id>/<item_id>/", views.CartItemDeleteAPIView.as_view()),
     path("order/create-order/", views.CreateOrderAPIView.as_view()),
     path("order/checkout/<oid>/", views.CheckoutAPIView.as_view()),
+    path("order/coupon/", views.CouponApplyAPIView.as_view()),
+    path("payment/stripe-checkout/<order_oid>/", views.StripeCheckoutAPIView.as_view()),
+    path("payment/payment-sucess/", views.PaymentSuccessAPIView.as_view()),
+
+
+    #Student API Endpoints
+    
+
+
+
+
 
 
 

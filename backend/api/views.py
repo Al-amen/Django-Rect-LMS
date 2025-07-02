@@ -1,4 +1,4 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 import random
 from decimal import Decimal
 
@@ -7,6 +7,8 @@ from django.core.mail import EmailMultiAlternatives
 from django.conf import settings
 from django.contrib.auth.hashers import check_password
 from django.shortcuts import get_object_or_404
+import requests
+import stripe.error
 
 
 from api import models as api_models
@@ -24,7 +26,7 @@ from rest_framework.parsers import MultiPartParser, FormParser
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 
-
+import stripe
 
 
 class MyTokenObtainPairView(TokenObtainPairView):
@@ -375,13 +377,178 @@ class CheckoutAPIView(generics.RetrieveAPIView):
 
 
 
+class CouponApplyAPIView(generics.CreateAPIView):
+    serializer_class = api_serializer.CartOrderSerializer
+    permission_classes = [IsAuthenticated]
+    queryset = api_models.CartOrder.objects.all()
+    lookup_field = 'oid'
+
+    def create(self,request, *args, **kwargs):
+        order_oid = request.data['oid']
+        coupon_code = request.data['coupon_code']
+        order = api_models.CartOrder.objects.filter(oid=order_oid).first()
+        coupon = api_models.Coupon.objects.filter(code=coupon_code).first()
+
+
+        if coupon:
+            order_items = api_models.CartOrderItem.objects.filter(order=order, teacher=coupon.teacher)
+            for i in order_items:
+                if not coupon in i.coupons.all():
+                    discount = i.total * (coupon.discount / 100)
+
+                    i.total -= discount
+                    i.price -= discount
+                    i.saved += discount
+                    i.applied_coupons = True
+
+                    order.coupons.add(coupon)
+                    order.total -= discount
+                    order.sub_total -= discount
+                    order.saved += discount
+
+                    i.save()
+                    order.save()
+                    coupon.used_by.add(order.student)
+                    return Response({"message":"Coupon Applied Successfully","icon": "success"},status=status.HTTP_200_OK)
+                else:
+                    return Response({"message":"Coupon Already Applied","icon": "error"},status=status.HTTP_400_BAD_REQUEST)
+        else:
+            return Response({"message":"Invalid Coupon Code","icon": "error"},status=status.HTTP_400_BAD_REQUEST)
+        
+
+
+class StripeCheckoutAPIView(generics.CreateAPIView):
+    serializer_class = api_serializer.CartOrderSerializer
+    permission_classes = [AllowAny]
+
+    def create(self, request, *args, **kwargs):
+        
+        order_oid = self.kwargs['order_oid']
+        order = api_models.CartOrder.objects.get(oid=order_oid)
+
+        if not order:
+            return Response({"message":"Order Not Found"},status=status.HTTP_404_NOT_FOUND)
+        
+        try:
+            checkout_session = stripe.checkout.Session.create(
+                customer_email=order.email,
+                payment_method_types=['card'],
+                line_items=[
+                    {
+                        'price_data': {
+                            'currency': 'usd',
+                            'product_data': {
+                                'name': order.full_name
+                            },
+                            'unit_amount': int(order.total * 100)
+                        },
+                        'quantity': 1
+                    }
+                ],
+                mode='payment',
+                success_url=settings.FRONTEND_SITE_URL + '/payment-success/' + order.oid + '?session_id={CHECKOUT_SESSION_ID}',
+                cancel_url=settings.FRONTEND_SITE_URL + '/payment-failed/'
+            )
+            order.stripe_session_id = checkout_session.id
+            return redirect(checkout_session.url)
+        except stripe.error.StripeError as e:
+            return Response({"message": f"Something went wrong when trying to make payment. Error: {str(e)}"})
+            
 
 
 
+def ger_access_token(client_id,secret_key):
+    token_url = "https://api-m.sandbox.paypal.com/v1/oauth2/token"
+    data = {'grant_type': 'client_credentials'}
+    auth = (client_id, secret_key)
+    response = requests.post(token_url, data=data, auth=auth)
 
-   
+    if response.status_code == 200:
+        access_token = response.json().get('access_token')
+        return access_token
+    else:
+        raise Exception(f"Failed to get access token: {response.status_code}")
+    
+
+class PaymentSuccessAPIView(generics.CreateAPIView):
+    serializer_class = api_serializer.CartOrderSerializer
+    permission_classes = [IsAuthenticated]
+
+    def create(self, request, *args, **kwargs):
+        order_oid = request.data['order_id']
+        session_id = request.data['session_id']
+        paypal_order_id = request.data['paypal_order_id']
+
+        print("order_oid ====", order_oid)
+        print("session_id ====", session_id)
+        print("paypal_order_id ====", paypal_order_id)
+
+        order = api_models.CartOrder.objects.objects.get(oid=order_oid)
+        order_items = api_models.CartOrderItem.objects.filter(order=order)
+
+
+        #paypal payment success
+
+        if paypal_order_id:
+            paypal_api_url = f"https://api-m.sandbox.paypal.com/v2/checkout/orders/{paypal_order_id}"
+
+            headers = {
+                'Content-Type': 'application/json',
+                'Authorization': f'Bearer {ger_access_token(settings.PAYPAL_CLIENT_ID, settings.PAYPAL_SECRET_ID)}'
+
+            }
+            response = requests.get(paypal_api_url, headers=headers)
+
+            if response.status_code == 200:
+               paypal_order_data = response.json()
+               paypal_payment_status = paypal_order_data.get('status')
+
+               if paypal_payment_status == 'COMPLETED':
+                   if order.payment_status == "Processing":
+                       order.payment_staus = "Paied"
+                       order.save()
+                       api_models.Notification.objects.create(user=order.student,order=order,type="Course Enrollment Completed")
+                       for item in order_items:
+                           api_models.Notification.objects.create(teacher=item.teacher, order=order,order_item=item,type="New Order")
+                           api_models.EnrolledCourse.objects.create(
+                               course=item.corse,
+                               user=order.student,
+                               teacher=item.teacher,
+                               order_item=item
+                           )
+                       return Response({"message":"Payment Success","icon":"success"},status=status.HTTP_200_OK)
+                   else:
+                       return Response({"message":"Payment Already Completed","icon":"info"},status=status.HTTP_200_OK)
+               else:
+                    return Response({"message":"Payment Failed","icon":"error"},status=status.HTTP_400_BAD_REQUEST)
+            else:
+                return Response({"message":"Failed to verify PayPal payment","icon":"error"},status=status.HTTP_400_BAD_REQUEST)
+        #stripe payment success
+        if session_id:
+            session = stripe.checkout.Session.retrieve(session_id)
+            if session.payment_status == 'paid':
+                if order.payment_status == "Processing":
+                    order.payment_status = "Paied"
+                    order.save()
+                    api_models.Notification.objects.create(user=order.student, order=order, type="Course Enrollment Completed")
+                    for item in order_items:
+                        api_models.Notification.objects.create(teacher=item.teacher, order=order, order_item=item, type="New Order")
+                        api_models.EnrolledCourse.objects.create(
+                            course=item.course,
+                            user=order.student,
+                            teacher=item.teacher,
+                            order_item=item
+                        )
+                    return Response({"message": "Payment Success", "icon": "success"}, status=status.HTTP_200_OK)
+                else:
+                    return Response({"message": "Payment Already Completed", "icon": "info"}, status=status.HTTP_200_OK)   
+            else:
+                return Response({"message": "Payment Failed", "icon": "error"}, status=status.HTTP_400_BAD_REQUEST)              
 
 
 
+                            
+                       
+                       
 
 
