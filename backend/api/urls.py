@@ -31,7 +31,9 @@ urlpatterns = [
 
 
     #Student API Endpoints
-    
+    path("student/summary/<user_id>/", views.StudentSummaryAPIView.as_view()),
+
+
 
 
 
