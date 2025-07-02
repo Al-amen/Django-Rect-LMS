@@ -622,3 +622,33 @@ class StudentCourseCompletedCreateAPIView(generics.CreateAPIView):
             )
             return Response({"message":"Course marked as completed"},status=status.HTTP_201_CREATED)
 
+class StudentNoteCreateAPIView(generics.ListCreateAPIView):
+    serializer_class = api_serializer.NoteSerializer
+    permission_classes = [AllowAny]
+
+    def get_queryset(self):
+        
+        user_id = self.kwargs['user_id']
+        enrollment_id = self.kwargs['enrollment_id']
+        user = User.objects.get(id=user_id)
+        enrolled = api_models.EnrolledCourse.objects.get(enrollment_id=enrollment_id)
+        return api_models.Note.objects.filter(user=user,course=enrolled.course)
+    
+    def create(self, request, *args, **kwargs):
+        user_id = request.data['user_id']
+        enrolment_id = request.data['enrollment_id']
+        title = request.data['title']
+        note = request.data['note']
+
+        user = User.objects.get(id=user_id)
+        enrolled = api_models.EnrolledCourse.objects.get(enrolment_id=enrolment_id)
+
+        api_models.Note.objects.create(
+            user=user,
+            course=enrolled.course,
+            title=title,
+            note=note
+        )
+        return Response({"message":"Note Created Successfully"},status=status.HTTP_201_CREATED)
+    
+    
