@@ -1,6 +1,8 @@
 from django.shortcuts import render, redirect
 import random
 from decimal import Decimal
+from datetime import datetime, timedelta
+from django.db import models
 
 from django.template.loader import render_to_string
 from django.core.mail import EmailMultiAlternatives
@@ -789,4 +791,49 @@ class QuestionAnswerMessageSendAPIView(generics.CreateAPIView):
        question_serializer = api_serializer.QuestionAnswerMessageSerializer(question)
 
        return Response({"message":"Message sent","question":question_serializer.data})
+    
+
+
+class TeacherSummaryAPIView(generics.ListAPIView):
+    serializer_class = api_serializer.TeacherSummarySerializer
+    permission_classes =[AllowAny]
+
+    def get_queryset(self):
+        teacher_id = self.kwargs['teacher_id']
+        teacher = api_models.Teacher.objects.get(id=teacher_id)
+
+        one_month_ago = datetime.today() - timedelta(days=28)
+
+        total_courses = api_models.Course.objects.filter(teacher=teacher).count()
+        total_revenue = api_models.CartOrderItem.objects.filter(teacher=teacher, order__payment_status="Paid").aggregate(total_revenue=models.Sum("price"))['total_revenue'] or 0
+        monthly_revenue = api_models.CartOrderItem.objects.filter(teacher=teacher,order__payment_status='Paid', date__gte=one_month_ago).aggregate(total_revenue=models.Sum("price"))['total_revenue'] or 0
+        enrolled_courses = api_models.EnrolledCourse.objects.filter(teacher=teacher)
+        unique_student_ids = set()
+        students = []
+
+        for course in enrolled_courses:
+            if course.user_id not in unique_student_ids:
+                user = User.objects.get(id=course.user_id)
+
+                student = {
+                    "full_name":user.profile.full_name,
+                    "image":user.profile.image.url,
+                    "country":user.profile.country,
+                    "date":course.date
+                }
+                students.append(student)
+                unique_student_ids.add(course.user_id)
+        
+        return [{
+            "total_courses":total_courses,
+            "total_revenue":total_revenue,
+            "monthly_revenue":monthly_revenue,
+            "total_students":len(students),
+        }]
+    
+    def list(self,request,*args, **kwargs):
+        queryset = self.get_queryset()
+        serializer = self.get_serializer(queryset,many=True)
+
+        return Response(serializer.data)
     
