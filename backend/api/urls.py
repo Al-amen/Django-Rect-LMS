@@ -45,10 +45,9 @@ urlpatterns = [
 
     #Teacher Endpoint
     path("teacher/summary/<teacher_id>/", views.TeacherSummaryAPIView.as_view()),
+    path("teacher/course-lists/<teacher_id>/", views.TeacherCourseListAPIView.as_view()),
+    path("teacher/review-lists/<teacher_id>/", views.TeacherReviewListAPIView.as_view()),
     
-
-
-
 
 
 

@@ -837,3 +837,31 @@ class TeacherSummaryAPIView(generics.ListAPIView):
 
         return Response(serializer.data)
     
+
+class TeacherCourseListAPIView(generics.ListAPIView):
+    serializer_class = api_serializer.CountrySerializer
+    permission_classes = [AllowAny]
+
+    def get_queryset(self):
+        teacher_id = self.kwargs['teacher_id']
+        teacher = api_models.Teacher.objects.get(id=teacher_id)
+        return api_models.Course.objects.filter(teacher=teacher, platform_status="Published", teacher_course_status="Published")
+
+class TeacherReviewListAPIView(generics.ListAPIView):
+    serializer_class = api_serializer.ReviewSerializer
+    permission_classes = [AllowAny]
+
+    def get_queryset(self):
+        teacher_id = self.kwargs['teacher_id']
+        teacher = api_models.Teacher.objects.get(id=teacher_id)
+        return api_models.Review.objects.filter(course__teacher=teacher)
+
+class TeacherReviewDetailAPIView(generics.RetrieveUpdateAPIView):
+    serializer_class = api_serializer.ReviewSerializer
+    permission_classes = [AllowAny]
+
+    def get_object(self):
+        teacher_id = self.kwargs['teacher_id']
+        review_id = self.kwargs['review_id']
+        teacher = api_models.Teacher.objects.get(id=teacher_id)
+        return api_models.Review.objects.get(id=review_id, course__teacher=teacher)
