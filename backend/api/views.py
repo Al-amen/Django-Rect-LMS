@@ -3,7 +3,7 @@ import random
 from decimal import Decimal
 from datetime import datetime, timedelta
 from django.db import models
-
+from django.db.models.functions import ExtractMonth
 from django.template.loader import render_to_string
 from django.core.mail import EmailMultiAlternatives
 from django.conf import settings
@@ -17,12 +17,15 @@ from api import models as api_models
 from api import serializer as api_serializer
 from userauths.models import Profile, User
 
+
+
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework import generics,status,viewsets
 from rest_framework.permissions import AllowAny,IsAuthenticated
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.response import Response
 from rest_framework.exceptions import PermissionDenied
+from rest_framework.decorators import api_view, APIView
 
 from rest_framework.parsers import MultiPartParser, FormParser
 from drf_yasg.utils import swagger_auto_schema
@@ -865,3 +868,42 @@ class TeacherReviewDetailAPIView(generics.RetrieveUpdateAPIView):
         review_id = self.kwargs['review_id']
         teacher = api_models.Teacher.objects.get(id=teacher_id)
         return api_models.Review.objects.get(id=review_id, course__teacher=teacher)
+    
+
+
+class TeacherStudentsListAPIView(viewsets.ViewSet):
+
+    def list(self, request, teacher_id=None):
+        
+        teacher = api_models.Teacher.objects.get(id=teacher_id)
+        enrolled_courses = api_models.EnrolledCourse.objects.filter(teacher=teacher)
+        
+        students = []
+        unique_student_ids = set()
+
+        for course in enrolled_courses:
+            if course.user_id not in unique_student_ids:
+                user = User.objects.get(id=course.user_id)
+                student = {
+                    "full_name": user.profile.full_name,
+                    "image": user.profile.image.url,
+                    "country": user.profile.country,
+                    "date": course.date
+                }
+                students.append(student)
+                unique_student_ids.add(course.user_id)
+
+        return Response(students)
+
+@api_view(['GET'])
+def TeacherAllMonthEarningAPIView(request, teacher_id):
+    teacher = api_models.Teacher.objects.get(id=teacher_id)
+    all_month_earnings = (
+        api_models.CartOrderItem.objects
+        .filter(teacher=teacher,order__payment_status="Paid")
+        .annotate( month=ExtractMonth("date"))
+        .values('month')
+        .annotate(total_earning=models.Sum('price'))
+        .order_by('month')
+    )
+    return Response(all_month_earnings)
