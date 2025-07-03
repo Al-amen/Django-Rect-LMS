@@ -907,3 +907,32 @@ def TeacherAllMonthEarningAPIView(request, teacher_id):
         .order_by('month')
     )
     return Response(all_month_earnings)
+
+
+class TeacherBestSellingCourseAPIView(viewsets.ViewSet):
+    
+    def list(self,request, teacher_id=None):
+        teacher = api_models.Teacher.objects.get(id=teacher_id)
+        courses_with_total_price = []
+        courses = api_models.Course.objects.filter(teacher=teacher)
+
+        for course in courses:
+            revenue = course.enrolledcourse_set.aggregate(total_price=models.Sum('order_item__price'))['total_price'] or 0
+            sales = course.enrolledcourse_set.count()
+            courses_with_total_price.append({
+                "course_image": course.image.url,
+                "course_name": course.title,
+                "total_revenue": revenue,
+                "total_sales": sales
+            })
+        return Response(courses_with_total_price)
+    
+
+class TeacherCourseOrdersListAPIView(generics.ListAPIView):
+    serializer_class = api_serializer.CartOrderItemSerializer
+    permission_classes = [AllowAny]
+
+    def get_queryset(self):
+        teacher_id = self.kwargs['teacher_id']
+        teacher = api_models.Teacher.objects.get(id=teacher_id)
+        return api_models.CartOrderItem.objects.filter(teacher=teacher)

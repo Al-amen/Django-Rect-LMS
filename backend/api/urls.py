@@ -50,6 +50,8 @@ urlpatterns = [
     path("teacher/review-detail/<teacher_id>/<review_id>/", views.TeacherReviewDetailAPIView.as_view()),
     path("teacher/student-lists/<teacher_id>/", views.TeacherStudentsListAPIView.as_view({'get': 'list'})),
     path("teacher/all-months-earning/<teacher_id>/", views.TeacherAllMonthEarningAPIView),
+    path("teacher/best-course-earning/<teacher_id>/", views.TeacherBestSellingCourseAPIView.as_view({'get': 'list'})),
+    path("teacher/course-order-list/<teacher_id>/", views.TeacherCourseOrdersListAPIView.as_view()),
 
 
 
