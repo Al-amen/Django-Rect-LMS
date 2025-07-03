@@ -40,6 +40,8 @@ urlpatterns = [
     path("student/rate-course/", views.StudentRateCourseCreateAPIView.as_view()),
     path("student/review-detail/<user_id>/<review_id>/", views.StudentRateCourseUpdateAPIView.as_view()),
     path("student/wishlist/<user_id>/", views.StudentWishListListCreateAPIView.as_view()),
+    path("student/question-answer-list-create/<course_id>/", views.QuestionAnswerListCreateAPIView.as_view()),
+    path("student/question-answer-message-create/", views.QuestionAnswerMessageSendAPIView.as_view()),
 
 
 

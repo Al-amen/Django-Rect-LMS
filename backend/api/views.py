@@ -730,4 +730,63 @@ class StudentWishListListCreateAPIView(generics.ListCreateAPIView):
                 user=user,course=course
             )
             return Response({"message":"Whishlist Created"},status=status.HTTP_201_CREATED)
-        
+
+
+
+class QuestionAnswerListCreateAPIView(generics.ListCreateAPIView):
+    serializer_class = api_serializer.QuestionAnswerSerializer
+    permission_classes = [AllowAny]
+
+    def get_queryset(self):
+        course_id = self.kwargs['course_id']
+        course = api_models.Course.objects.get(id=course_id)
+        return api_models.QuestionAnswer.objects.filter(course=course)
+    
+    def create(self, request, *args, **kwargs):
+        course_id = request.data['course_id']
+        user_id = request.data['user_id']
+        title = request.data['title']
+        message = request.data['message']
+
+        user = User.objects.get(id=user_id)
+        course = api_models.Course.objects.get(id=course_id)
+
+        question = api_models.QuestionAnswer.objects.create(
+            course=course,
+            user=user,
+            title=title
+        )
+        api_models.QuestionAnswerMessage.objects.create(
+            course=course,
+            user=user,
+            message=message,
+            question=question
+        )
+        return Response({"message":"Group conversation Started"}, status=status.HTTP_201_CREATED)
+
+
+
+class QuestionAnswerMessageSendAPIView(generics.CreateAPIView):
+    serializer_class = api_serializer.QuestionAnswerMessageSerializer
+    permission_classes = [AllowAny]
+
+    def create(self, request, *args, **kwargs):
+       course_id = request.data['course_id']
+       qa_id = request.data['qa_id']
+       user_id = request.data['user_id']
+       message = request.data['message']
+
+       user = User.objects.get(id=user_id)
+       course = api_models.Course.objects.get(id=course_id)
+       question = api_models.QuestionAnswer.objects.get(qa_id=qa_id)
+       api_models.QuestionAnswerMessage.objects.create(
+           course=course,
+           user=user,
+           message=message,
+           question=question
+       )
+
+       question_serializer = api_serializer.QuestionAnswerMessageSerializer(question)
+
+       return Response({"message":"Message sent","question":question_serializer.data})
+    
