@@ -55,7 +55,10 @@ urlpatterns = [
     path("teacher/question-answer-list/<teacher_id>/", views.TeacherQuestionAnswerListAPIView.as_view()),
     path("teacher/coupon-list/<teacher_id>/", views.TeacherCouponListCreateAPIView.as_view()),
     path("teacher/coupon-detail/<teacher_id>/<coupon_id>/", views.TeacherCouponDetailAPIView.as_view()),
-    
+    path("teacher/noti-list/<teacher_id>/", views.TeacherNotificationListAPIView.as_view()),
+    path("teacher/noti-detail/<teacher_id>/<noti_id>", views.TeacherNotificationDetailAPIView.as_view()),
+    path("teacher/course-create/", views.CourseCreateAPIView.as_view()),
+
 
 
 
