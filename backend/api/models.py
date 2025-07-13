@@ -136,17 +136,16 @@ class Course(models.Model):
     teacher_course_status = models.CharField(choices=TEACHER_STATUS,default="Published",max_length=100)
     featured = models.BooleanField(default=False)
     course_id = ShortUUIDField(unique=True, null=True,blank=True)
-    slug = models.SlugField(default=timezone.now)
+    slug = models.SlugField(unique=True)
     date = models.DateTimeField(default=timezone.now)
 
     def __str__(self):
         return self.title
 
     def save(self,*args, **kwargs):
-        if not self.slug:
-            self.slug = slugify(self.title) + str(self.pk)
+            self.slug = slugify(self.title) + str(self.pk) 
         
-        super(Course,self).save(*args, **kwargs)
+            super(Course,self).save(*args, **kwargs)
     
     def students(self):
         return EnrolledCourse.objects.filter(course=self)
@@ -264,7 +263,7 @@ class Cart(models.Model):
     total = models.DecimalField(max_digits=12, decimal_places=2, default=0.00, blank=True, null=True)
     tax_fee = models.DecimalField(max_digits=12, decimal_places=2, default=0.00, blank=True, null=True)
     country = models.CharField(max_length=100, null=True, blank=True)
-    card_id = ShortUUIDField(unique=True, length=6, max_length=20, alphabet="1234567890")
+    cart_id = ShortUUIDField(unique=True, length=6, max_length=20, alphabet="1234567890")
     date = models.DateTimeField(default=timezone.now)
 
     def __str__(self):

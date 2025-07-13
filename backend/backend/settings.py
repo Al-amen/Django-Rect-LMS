@@ -235,17 +235,14 @@ CORS_ALLOW_ALL_ORIGINS = True
 
 FRONTEND_SITE_URL = env('FRONTEND_SITE_URL')  # e.g., 'http://localhost:3000'
 
-
-MAILERSEND_API_TOKEN = env('MAILERSEND_API_TOKEN')
-MAILERSEND_SENDER_DOMAIN = env('MAILERSEND_SENDER_DOMAIN')
-
-ANYMAIL = {
-    "MAILERSEND_API_TOKEN": MAILERSEND_API_TOKEN,
-    "MAILERSEND_SENDER_DOMAIN": MAILERSEND_SENDER_DOMAIN,
-}
-
-FROM_EMAIL=env('FROM_EMAIL')
-EMAIL_BACKEND = 'anymail.backends.mailersend.EmailBackend'
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'  # SMTP server host
+EMAIL_PORT = 587  # SMTP server port (587 for TLS, 465 for SSL)
+EMAIL_USE_TLS = True  # True for TLS, False for SSL
+EMAIL_HOST_USER = env('EMAIL_HOST_USER')  # SMTP server username
+EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD')  # SMTP server password
+EMAIL_USE_SSL = False  # Set to True if using SSL
+DEFAULT_FROM_EMAIL = env('DEFAULT_FROM_EMAIL')  # Default sender email address
 
 
 

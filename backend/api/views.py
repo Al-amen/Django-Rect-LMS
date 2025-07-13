@@ -9,6 +9,7 @@ from django.core.mail import EmailMultiAlternatives
 from django.conf import settings
 from django.contrib.auth.hashers import check_password
 from django.shortcuts import get_object_or_404
+from django.core.files.uploadedfile import InMemoryUploadedFile
 import requests
 import stripe.error
 
@@ -16,6 +17,8 @@ import stripe.error
 from api import models as api_models
 from api import serializer as api_serializer
 from userauths.models import Profile, User
+import math
+import os
 
 
 
@@ -30,6 +33,9 @@ from rest_framework.decorators import api_view, APIView
 from rest_framework.parsers import MultiPartParser, FormParser
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
+from django.core.files.storage import default_storage
+import ffmpeg
+from django.core.files.base import ContentFile
 
 import stripe
 
@@ -64,7 +70,7 @@ class PasswordResetEmailVerifyAPIView(generics.RetrieveAPIView):
             user.otp = generate_random_otp()
             user.save()
 
-            link = f"http://127.0.0.1:8000/password-change/?otp={user.otp}&uuidb64={uuidb64}&refresh_token={refresh_token}"
+            link = f"http://localhost:5173/create-new-password/?otp={user.otp}&uuidb64={uuidb64}&refresh_token={refresh_token}"
 
             context = {
                 "link":link,
@@ -77,7 +83,7 @@ class PasswordResetEmailVerifyAPIView(generics.RetrieveAPIView):
 
             mgs = EmailMultiAlternatives(
                 subject=subject,
-                from_email=settings.FROM_EMAIL,
+                from_email=settings.DEFAULT_FROM_EMAIL,
                 to = [user.email],
                 body=text_body
             )
@@ -93,9 +99,9 @@ class PasswordChangeAPIView(generics.CreateAPIView):
 
 
     def create(self,request,*args, **kwargs):
-        otp = request.data['otp']
-        uuidb64 = request.data['uuidb64']
-        password = request.data['password']
+        otp = request.data.get('otp')
+        uuidb64 = request.data.get('uuidb64')
+        password = request.data.get('password')
 
         user = User.objects.get(id=uuidb64,otp=otp)
 
@@ -1023,3 +1029,246 @@ class CourseCreateAPIView(APIView):
             level=level
         )
         return Response({"message":"Course created","course_id":course.course_id},status=status.HTTP_201_CREATED)
+
+
+class CourseUpdateAPIView(generics.RetrieveUpdateAPIView):
+    queryset = api_models.Course.objects.all()
+    serializer_class = api_serializer.CourseSerializer
+    permission_classes = [AllowAny]
+
+
+    def get_object(self):
+        teacher_id = self.kwargs['teacher_id']
+        course_id = self.kwargs['course_id']
+
+        teacher = api_models.Teacher.objects.get(id=teacher_id)
+        course = api_models.Course.objects.get(course_id=course_id)
+
+        return course
+    
+
+    def update(self, request, *args, **kwargs):
+       
+        course = self.get_object()
+        serializer = self.get_serializer(course, data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+
+        if "image" in request.data and isinstance(request.data["image"],InMemoryUploadedFile):
+            course.image = request.data["image"]
+        elif 'image' in request.data and str(request.data["image"]) == "No File":
+            course.image = None
+
+        if 'file' in request.data and not str(request.data['file']).startswith("http://"):
+            course.file = request.data['file']
+
+        if request.data['category'] and request.data['category'] != 'NaN' and request.data['category'] != 'undefined':
+            category = api_models.Category.objects.get(id=request.data['category'])
+            course.category = category
+        
+        self.perform_update(serializer)
+        self.update_variant(course,request.data)
+        return Response(serializer.data,status=status.HTTP_200_OK)
+    
+    def update_variant(self,course,request_data):
+        for key, value in request_data.items():
+            if key.startswith("variants") and '[variant_title]' in key:
+                
+                index = key.split('[')[1].split(']')[0]
+                title = value
+
+                id_key = f"variants[{index}][variant_id]"
+                variant_id = request_data.get(id_key)
+
+                variant_data = {'title':title}
+                item_data_list = []
+                current_item = {}
+
+                for item_key , item_value in request_data.items():
+                    if f'variants[{index}][items]' in item_key:
+                        field_name = item_key.split('[')[-1].split(']')[0]
+                        if field_name == 'title':
+                            if current_item:
+                                item_data_list.append(current_item)
+                            current_item = {}
+                        
+                        current_item.update({field_name:item_value})
+                
+                if current_item:
+                    item_data_list.append(current_item)
+                
+                existing_variant = course.variant_set.filter(id=variant_id).first()
+
+                if existing_variant:
+                    existing_variant.title = title
+                    existing_variant.save()
+
+                    for item_data in item_data_list[1:]:
+                        preview_value = item_data.get("preview")
+                        preview = bool(strtobool(str(preview_value))) if preview_value is not None else False
+                        variant_item = api_models.VariantItem.objects.filter(veriant_item=item_data.get("variant_item_id")).first()
+
+                        if not str(item_data.get("file")).startswith("http://"):
+                            if item_data.get("file") != "null":
+                                file = item_data.get("file")
+                            else:
+                                file = None
+                            
+                            title = item_data.get("title")
+                            description = item_data.get("description")
+
+                            if variant_item:
+                                variant_item.title = title
+                                variant_item.description = description
+                                variant_item.file = file
+                                variant_item.preview = preview
+                            else:
+                                variant_item = api_models.VariantItem.objects.create(
+                                    variant=existing_variant,
+                                    title=title,
+                                    description=description,
+                                    file=file,
+                                    preview=preview
+
+                                )
+                        else:
+                            title = item_data.get("title")
+                            description = item_data.get("description")
+
+                            if variant_item:
+                                variant_item.title = title,
+                                variant_item.description = description,
+                                variant_item.preview = preview
+                            
+                            else:
+                                variant_item = api_models.VariantItem.objects.create(
+                                    variant=existing_variant,
+                                    title=title,
+                                    description=description,
+                                    preview=preview,
+                                )
+                        variant_item.save()
+                
+                else:
+                    new_variant = api_models.Variant.objects.create(
+                        course=course,
+                        title=title
+                    )
+
+                    for item_data in item_data_list:
+                        preview_value = item_data.get("preview")
+                        preview = bool(strtobool(str(preview_value))) if preview_value is None else False
+
+                        api_models.Variant.objects.create(
+                            variant=new_variant,
+                            title=item_data.get("title"),
+                            description=item_data.get("description"),
+                            file=item_data.get("file"),
+                            preview=preview
+
+                        )
+    def save_nested_data(self,coure_instance, serializer_class, data):
+        serializer = serializer_class(data=data,many=True, context={"Course_instance": coure_instance})
+        serializer.is_valid(raise_exception=True)
+        serializer.save(course=coure_instance)
+
+
+
+
+
+
+class TeacherCourseDetailAPIView(generics.RetrieveDestroyAPIView):
+    serializer_class = api_serializer.CourseSerializer
+    permission_classes = [AllowAny]
+
+    def get_objects(self):
+        slug = self.kwargs['slug']
+        return api_models.Course.objects.get(slug=slug)
+
+class CourseVariantDeleteAPIView(generics.DestroyAPIView):
+    serializer_class = api_serializer.VariantSerializer
+    permission_classes = [AllowAny]
+
+
+    def get_object(self):
+        variant_id = self.kwargs['variant_id']
+        teacher_id = self.kwargs['teacher_id']
+        course_id = self.kwargs['course_id']
+
+        teacher = api_models.Teacher.objects.get(id=teacher_id)
+        course = api_models.Course.object.get(teacher=teacher,course_id=course_id)
+        return api_models.Variant.objects.get(id=variant_id)
+    
+
+class CourseVariantItemDeleteAPIVIew(generics.DestroyAPIView):
+    serializer_class = api_serializer.VariantItemSerializer
+    permission_classes = [IsAuthenticated]
+
+
+    def get_object(self):
+        variant_id = self.kwargs['varint_id']
+        variant_item_id = self.kwargs['variant_item_id']
+        teacher_id = self.kwargs['teacher_id']
+        course_id = self.kwargs['course_id']
+
+        teacher = api_models.Teacher.objects.get(id=teacher_id)
+        course = api_models.Course.objects.get(teacher=teacher,course_id=course_id)
+        variant = api_models.VariantItem.objects.get(variant=variant,variant_item_id=variant_item_id)
+
+        return api_models.VariantItem.objects.get(variant=variant,variant_item_id=variant_item_id)
+
+
+class FileUploadAPIView(APIView):
+    permission_classes = [AllowAny]
+    parser_classes = [MultiPartParser,FormParser]
+
+    @swagger_auto_schema(
+        operation_description='Upload a file',
+        request_body=api_serializer.FileUploadSerializer,
+        responses={
+            200:openapi.Response('File upload successfully',openapi.Schema(type=openapi.TYPE_OBJECT)),
+            400: openapi.Response('No file provided',openapi.Schema(type=openapi.TYPE_OBJECT)),
+
+        }
+    )
+
+    def post(self,request):
+        serializer = api_serializer.FileUploadSerializer(data=request.data)
+
+        if serializer.is_valid():
+            file = serializer.validated_data.get('file')
+
+            file_path = default_storage.save(file.name, ContentFile(file.read()))
+            file_url = request.build_absolute_uri(default_storage.url(file_path))
+
+            # Check if the file is a video by inspecting its extension
+            if file.name.endswith(('.mp4', '.avi', '.mov', '.mkv')):
+                # Calculate the video duration
+                file_full_path = os.path.join(default_storage.location, file_path)
+                probe = ffmpeg.probe(file_full_path)
+                duration_seconds = probe['format']['duration']
+
+                # Calculate minutes and seconds
+                minutes, remainder = divmod(duration_seconds, 60)
+                minutes = math.floor(minutes)
+                seconds = math.floor(remainder)
+
+                duration_text = f"{minutes}m {seconds}s"
+
+                print("url ==========", file_url)
+                print("duration_seconds ==========", duration_seconds)
+
+                # Return both the file URL and the video duration
+                return Response({
+                    "url": file_url,
+                    "video_duration": duration_text
+                })
+
+            # If not a video, just return the file URL
+            return Response({
+                    "url": file_url,
+            })
+
+        return Response({"error": "No file provided"}, status=400)
+
+

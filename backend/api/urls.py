@@ -58,6 +58,18 @@ urlpatterns = [
     path("teacher/noti-list/<teacher_id>/", views.TeacherNotificationListAPIView.as_view()),
     path("teacher/noti-detail/<teacher_id>/<noti_id>", views.TeacherNotificationDetailAPIView.as_view()),
     path("teacher/course-create/", views.CourseCreateAPIView.as_view()),
+    path("teacher/course-update/<teacher_id>/<course_id>/", views.CourseUpdateAPIView.as_view()),
+    path("teacher/course-detail/<course_id>/", views.TeacherCourseDetailAPIView.as_view()),
+    path("teacher/course/variant-delete/<variant_id>/<teacher_id>/<course_id>/", views.CourseVariantDeleteAPIView.as_view()),
+    path("teacher/course/variant-item-delete/<variant_id>/<variant_item_id>/<teacher_id>/<course_id>/", views.CourseVariantItemDeleteAPIVIew.as_view()),
+
+
+
+    path("file-upload/", views.FileUploadAPIView.as_view())
+
+
+
+    
 
 
 
