@@ -159,12 +159,22 @@ class CategoryListAPIView(generics.ListAPIView):
     serializer_class = api_serializer.CategorySerializer
     permission_classes = [AllowAny]
 
+    
+
 
 class CourseListAPIView(generics.ListAPIView):
     serializer_class = api_serializer.CourseSerializer
     queryset = api_models.Course.objects.filter(platform_status="Published",teacher_course_status="Published")
     permission_classes = [AllowAny]
 
+
+class CourseDetailAPIView(generics.RetrieveDestroyAPIView):
+    serializer_class = api_serializer.CourseSerializer
+    permission_classes = [AllowAny]
+    
+    def get_object(self):
+        slug = self.kwargs['slug']
+        return api_models.Course.objects.get(slug=slug)
 
 class SearchCourseAPIView(generics.ListAPIView):
     serializer_class = api_serializer.CourseSerializer

@@ -14,9 +14,10 @@ urlpatterns = [
     path('user/change-password/',views.ChangePasswordAPIView.as_view()),
 
     #core Endpoints
-    path('course/category',views.CategoryListAPIView.as_view()),
+    path('course/category/',views.CategoryListAPIView.as_view()),
     path('course/course-list/',views.CourseListAPIView.as_view()),
     path("course/search/", views.SearchCourseAPIView.as_view()),
+    path("course/course-detail/<slug>/", views.CourseDetailAPIView.as_view()),
     path('course/cart/',views.CartAPIView.as_view()),
     path('course/cart-list/<cart_id>/',views.CartListAPIView.as_view()),
     path('course/cart/',views.CartAPIView.as_view()),

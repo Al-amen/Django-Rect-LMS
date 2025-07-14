@@ -82,7 +82,7 @@ class Teacher(models.Model):
     twitter = models.URLField(null=True, blank=True)
     linkedin = models.URLField(null=True, blank=True)
     about = models.TextField(null=True, blank=True)
-    coutry = models.CharField(max_length=100, null=True, blank=True)
+    country = models.CharField(max_length=100, null=True, blank=True)
     date = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
@@ -104,7 +104,7 @@ class Category(models.Model):
     title = models.CharField(max_length=100)
     image = models.FileField(upload_to='course-file', default='category.jpg', null=True, blank=True)
     active = models.BooleanField(default=True)
-    slug = models.SlugField(max_length=100, unique=True)
+    slug = models.SlugField(unique=True,null=True, blank=True)
 
     class Meta:
         verbose_name_plural = 'Categories'
@@ -136,16 +136,17 @@ class Course(models.Model):
     teacher_course_status = models.CharField(choices=TEACHER_STATUS,default="Published",max_length=100)
     featured = models.BooleanField(default=False)
     course_id = ShortUUIDField(unique=True, null=True,blank=True)
-    slug = models.SlugField(unique=True)
+    slug = models.SlugField(unique=True, null=True, blank=True)
     date = models.DateTimeField(default=timezone.now)
 
     def __str__(self):
         return self.title
 
     def save(self,*args, **kwargs):
-            self.slug = slugify(self.title) + str(self.pk) 
-        
-            super(Course,self).save(*args, **kwargs)
+            if not self.slug:
+                self.slug = slugify(self.title) 
+            
+                super(Course,self).save(*args, **kwargs)
     
     def students(self):
         return EnrolledCourse.objects.filter(course=self)
@@ -195,7 +196,7 @@ class VariantItem(models.Model):
     date = models.DateTimeField(default=timezone.now)
 
     def __str__(self):
-        return self.title
+        return f"{self.variant.title} - {self.title}"
     
      # def save(self, *args, **kwargs):
     #     super().save(*args, **kwargs)
@@ -222,7 +223,7 @@ class QuestionAnswer(models.Model):
     date = models.DateTimeField(default=timezone.now)
 
     def __str__(self):
-        return self.title if self.title else f"Question by {self.user.email}"
+        return f"{self.user.username} - {self.course.title}"
     
     class Meta:
         ordering = ['-date']
@@ -290,7 +291,7 @@ class CartOrder(models.Model):
 
 
     class Meta:
-        ordering = ['-date']
+        ordering = ['date']
 
 
     def __str__(self):
