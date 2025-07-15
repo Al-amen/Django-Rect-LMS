@@ -11,7 +11,6 @@ from django.contrib.auth.hashers import check_password
 from django.shortcuts import get_object_or_404
 from django.core.files.uploadedfile import InMemoryUploadedFile
 import requests
-import stripe.error
 
 
 from api import models as api_models
@@ -19,7 +18,6 @@ from api import serializer as api_serializer
 from userauths.models import Profile, User
 import math
 import os
-
 
 
 from rest_framework_simplejwt.views import TokenObtainPairView
@@ -37,7 +35,10 @@ from django.core.files.storage import default_storage
 import ffmpeg
 from django.core.files.base import ContentFile
 
+
+import stripe.error
 import stripe
+stripe.api_key = settings.STRIPE_SECRET_KEY
 
 
 class MyTokenObtainPairView(TokenObtainPairView):
@@ -171,7 +172,7 @@ class CourseListAPIView(generics.ListAPIView):
 class CourseDetailAPIView(generics.RetrieveDestroyAPIView):
     serializer_class = api_serializer.CourseSerializer
     permission_classes = [AllowAny]
-    
+
     def get_object(self):
         slug = self.kwargs['slug']
         return api_models.Course.objects.get(slug=slug)
@@ -311,7 +312,7 @@ class CartStatsAPIView(generics.RetrieveAPIView):
         for cart_item in queryset:
             total_price += float(self.calculate_price(cart_item))
             total_tax += float(self.calculate_tax(cart_item))
-            total_total += float(self.calculate_total((cart_item)),2)
+            total_total += round(float(self.calculate_total(cart_item)), 2)
         
         data = {
             "price":total_total,
@@ -438,18 +439,18 @@ class CouponApplyAPIView(generics.CreateAPIView):
         
 
 
+
 class StripeCheckoutAPIView(generics.CreateAPIView):
     serializer_class = api_serializer.CartOrderSerializer
     permission_classes = [AllowAny]
 
     def create(self, request, *args, **kwargs):
-        
         order_oid = self.kwargs['order_oid']
-        order = api_models.CartOrder.objects.get(oid=order_oid)
+        try:
+            order = api_models.CartOrder.objects.get(oid=order_oid)
+        except api_models.CartOrder.DoesNotExist:
+            return Response({"message": "Order Not Found"}, status=status.HTTP_404_NOT_FOUND)
 
-        if not order:
-            return Response({"message":"Order Not Found"},status=status.HTTP_404_NOT_FOUND)
-        
         try:
             checkout_session = stripe.checkout.Session.create(
                 customer_email=order.email,
@@ -470,11 +471,12 @@ class StripeCheckoutAPIView(generics.CreateAPIView):
                 success_url=settings.FRONTEND_SITE_URL + '/payment-success/' + order.oid + '?session_id={CHECKOUT_SESSION_ID}',
                 cancel_url=settings.FRONTEND_SITE_URL + '/payment-failed/'
             )
+            print(checkout_session)
             order.stripe_session_id = checkout_session.id
+            order.save()
             return redirect(checkout_session.url)
         except stripe.error.StripeError as e:
             return Response({"message": f"Something went wrong when trying to make payment. Error: {str(e)}"})
-            
 
 
 
@@ -532,7 +534,7 @@ class PaymentSuccessAPIView(generics.CreateAPIView):
                        for item in order_items:
                            api_models.Notification.objects.create(teacher=item.teacher, order=order,order_item=item,type="New Order")
                            api_models.EnrolledCourse.objects.create(
-                               course=item.corse,
+                               course=item.course,
                                user=order.student,
                                teacher=item.teacher,
                                order_item=item

@@ -190,7 +190,7 @@ JAZZMIN_UI_TWEAKS = {
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework.authentication.SessionAuthentication',  # Optional
+        #'rest_framework.authentication.SessionAuthentication',  # Optional
         'rest_framework_simplejwt.authentication.JWTAuthentication',        
     ],
     'DEFAULT_PERMISSION_CLASSES': [
@@ -249,3 +249,6 @@ DEFAULT_FROM_EMAIL = env('DEFAULT_FROM_EMAIL')  # Default sender email address
 STRIPE_SECRET_KEY = env("STRIPE_SECRET_KEY")
 PAYPAL_CLIENT_ID = env("PAYPAL_CLIENT_ID") # PAYPAL_CLIENT_ID=9-320034750834758934758347
 PAYPAL_SECRET_ID = env("PAYPAL_SECRET_ID") # PAYPAL_SECRET_ID=9-3200347508347589
+
+#https://receive-smss.com/sms/447723814271/
+#https://ukpostcode.org/search?postlocations=London&state=GB-ENG&search=search
