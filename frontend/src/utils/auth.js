@@ -1,3 +1,5 @@
+//utils/auth.js
+
 import { useAuthStore } from "../store/auth";
 import axios from "./axios";
 import { jwtDecode } from "jwt-decode";
@@ -60,7 +62,11 @@ export const setUser = async () => {
     }
     if(isAccessTokenExpired(access_token)) {
         const response = await getRefreshToken(refresh_token);
-        set
+      
+        setAuthUser(response.data.access, response.data.refresh); 
+    }
+    else {
+        setAuthUser(access_token, refresh_token);
     }
 };
 
@@ -71,6 +77,10 @@ export const setAuthUser = (access_token,refresh_token) => {
             secure:true,
 
         });
+        Cookie.set("refresh_token",refresh_token,{
+            expires:7,
+            secure:true,
+        })
         const user = access_token ? jwtDecode(access_token):null;
         if(user) {
             useAuthStore.getState().setUser(user);
@@ -99,15 +109,6 @@ export const getRefreshToken = async() => {
     }
 }
 
-// export const isAccessTokenExpired = (access_token) => {
-//     try {
-//         const decodedToken = jwtDecode(access_token);
-//         return decodedToken.exp < Date.now() / 1000;
-//     } catch (error) {
-//         console.error("Error decoding token:",error);
-//         return true;
-//     }
-// }
 
 
 
