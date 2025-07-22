@@ -4,13 +4,24 @@ import moment from "moment";
 import BaseHeader from "../partials/BaseHeader";
 import BaseFooter from "../partials/BaseFooter";
 import useAxios from "../../utils/useAxios";
+import GetCurrentAddress from "../plugin/UserCountry";
+import UserData from "../plugin/UserData";
+import CartId from "../plugin/CartId";
+import Toast from "../plugin/Toast";
 
 function CourseDetail() {
   const [course, setCourse] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [addToCartBtn, setAddToCartBtn] = useState("Add To Cart");
+  const [cartId] = useState(() => CartId());
   const param = useParams();
-  console.log(param.slug);
 
+  const country = GetCurrentAddress().country;
+  const userId = UserData()?.user_id || 0;
+
+  console.log("cartId =========", cartId);
+
+  console.log(course.slug);
 
   const fetchCourse = async () => {
     await useAxios.get(`course/course-detail/${param.slug}/`).then((res) => {
@@ -23,7 +34,31 @@ function CourseDetail() {
     fetchCourse();
   }, []);
 
-  console.log("course curriculam",course)
+  const addToCart = async (courseId, userId, price, country, cartId) => {
+    setAddToCartBtn("Adding To Cart");
+    const formdata = new FormData();
+    formdata.append("course_id", courseId);
+    formdata.append("user_id", userId);
+    formdata.append("price", price);
+    formdata.append("country_name", country);
+    formdata.append("cart_id", cartId);
+
+    try {
+      await useAxios.post(`course/cart/`, formdata).then((res) => {
+        console.log(res.data);
+        setAddToCartBtn("Added To Cart");
+        Toast().fire({
+          title: "Added To Cart",
+          icon: "success",
+        });
+      });
+    } catch (error) {
+      console.log(error);
+      setAddToCartBtn("Add To Cart");
+    }
+  };
+
+  console.log("course curriculam", course);
   return (
     <>
       <BaseHeader />
@@ -312,7 +347,9 @@ function CourseDetail() {
                               <div className="row g-0 align-items-center">
                                 <div className="col-md-5">
                                   {/* Image */}
-                                  <img height={150} width={150}
+                                  <img
+                                    height={150}
+                                    width={150}
                                     src={course.teacher.image}
                                   />
                                 </div>
@@ -323,9 +360,7 @@ function CourseDetail() {
                                     <h3 className="card-title mb-0">
                                       {course.teacher.full_name}
                                     </h3>
-                                    <p className="mb-2">
-                                      {course.teacher.bio}
-                                    </p>
+                                    <p className="mb-2">{course.teacher.bio}</p>
                                     {/* Social button */}
                                     <ul className="list-inline mb-3">
                                       <li className="list-inline-item me-3">
@@ -347,7 +382,7 @@ function CourseDetail() {
                                       <li className="list-inline-item me-3">
                                         <a
                                           href={course.teacher.linkedin}
-                                          className="fs-5 text-linkedin" 
+                                          className="fs-5 text-linkedin"
                                         >
                                           <i className="fab fa-linkedin" />
                                         </a>
@@ -360,10 +395,12 @@ function CourseDetail() {
                             {/* Card END */}
                             {/* Instructor info */}
                             <h5 className="mb-3">About Instructor</h5>
-                            <p style={{ whiteSpace: "pre-line" }} className="mb-3" >
+                            <p
+                              style={{ whiteSpace: "pre-line" }}
+                              className="mb-3"
+                            >
                               {course.teacher.about}
                             </p>
-                            
                           </div>
                           <div
                             className="tab-pane fade"
@@ -1230,7 +1267,9 @@ function CourseDetail() {
                               {/* Price and time */}
                               <div>
                                 <div className="d-flex align-items-center">
-                                  <h3 className="fw-bold mb-0 me-2">${course.price}</h3>
+                                  <h3 className="fw-bold mb-0 me-2">
+                                    ${course.price}
+                                  </h3>
                                 </div>
                               </div>
                               {/* Share button with dropdown */}
@@ -1280,20 +1319,46 @@ function CourseDetail() {
                             </div>
                             {/* Buttons */}
                             <div className="mt-3 d-sm-flex justify-content-sm-between ">
-                              <Link
-                                to="/cart/"
-                                className="btn btn-primary mb-0 w-100 me-2"
-                              >
-                                <i className="fas fa-shopping-cart"></i> Add To
-                                Cart
-                              </Link>
-                              <Link
-                                to="/cart/"
-                                className="btn btn-success mb-0 w-100"
-                              >
-                                Enroll Now{" "}
-                                <i className="fas fa-arrow-right"></i>
-                              </Link>
+                              {addToCartBtn === "Add To Cart" && (
+                                <button
+                                  type="button"
+                                  className="btn btn-primary mb-0 w-100 me-2 mt-3"
+                                  onClick={() =>
+                                    addToCart(
+                                      course?.id,
+                                      userId,
+                                      course.price,
+                                      country,
+                                      cartId
+                                    )
+                                  }
+                                >
+                                  <i className="fas fa-shopping-cart"></i> Add
+                                  To Cart
+                                </button>
+                              )}
+
+                              {addToCartBtn === "Added To Cart" && (
+                                <button
+                                  type="button"
+                                  className="btn btn-primary mb-0 w-100 me-2 mt-3"
+                                  disabled
+                                >
+                                  <i className="fas fa-check-circle"></i> Added
+                                  To Cart
+                                </button>
+                              )}
+
+                              {addToCartBtn === "Adding To Cart" && (
+                                <button
+                                  type="button"
+                                  className="btn btn-primary mb-0 w-100 me-2 mt-3"
+                                  disabled
+                                >
+                                  <i className="fas fa-spinner fa-spin"></i>{" "}
+                                  Adding To Cart
+                                </button>
+                              )}
                             </div>
                           </div>
                         </div>
@@ -1366,7 +1431,7 @@ function CourseDetail() {
                       <h2 className="mb-1 h1">Related Courses</h2>
                       <p>
                         These are the most popular courses among Geeks Courses
-                        learners worldwide in year 2022
+                        learners worldwide in year 2025
                       </p>
                     </div>
                   </div>

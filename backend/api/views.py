@@ -260,7 +260,7 @@ class CartAPIView(generics.CreateAPIView):
             cart.price = price
             cart.tax_fee = Decimal(price) * Decimal(tax_rate)
             cart.country = country
-            cart_id = cart_id
+            cart.cart_id = cart_id
             cart.total = Decimal(cart.price) + Decimal(cart.tax_fee)
             cart.save()
 
