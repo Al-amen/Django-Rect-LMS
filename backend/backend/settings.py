@@ -26,7 +26,7 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
-    'jazzmin',
+   # 'jazzmin',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -44,7 +44,9 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt.token_blacklist',
     'corsheaders',
     'anymail',
+    "smart_selects",
     'drf_yasg'
+    
 
 
 ]
@@ -150,6 +152,11 @@ JAZZMIN_SETTINGS  = {
     "welcome_sign": "Welcome to the Learning Management System",
     "copyright": "Learning Management System Ltd",
     "show_ui_builder": True,
+    "use_google_fonts_cdn": False,  # Optional, reduces JS conflict risk
+    "changeform_format": "horizontal_tabs",  # Default layout
+    "changeform_format_overrides": {
+        "api.VariantItem": "single",  # ✅ Tells Jazzmin to leave the form simple
+    }
 
 }
 

@@ -4,7 +4,7 @@ from django.utils.text import slugify
 from shortuuid.django_fields import ShortUUIDField
 from django.utils import timezone
 #from moviepy.editor import VideoFileClip
-
+from smart_selects.db_fields import ChainedForeignKey
 
 
 
@@ -75,7 +75,7 @@ NOTI_TYPE = (
 
 class Teacher(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    image = models.FileField(upload_to='course-file', default='default-teacher.jpg', null=True, blank=True)
+    image = models.FileField(upload_to='course-file',  default='default-teacher.jpg', null=True, blank=True)
     full_name = models.CharField(max_length=100)
     bio = models.CharField(max_length=500, null=True, blank=True)
     facebook = models.URLField(null=True, blank=True)
@@ -126,7 +126,7 @@ class Course(models.Model):
     category = models.ForeignKey(Category,on_delete=models.SET_NULL, null=True,blank=True)
     teacher = models.ForeignKey(Teacher, on_delete=models.SET_NULL, null=True, blank=True)
     file = models.CharField(max_length=1000, null=True, blank=True)
-    image = models.CharField(max_length=200, null=True, blank=True)
+    image = models.ImageField(null=True,blank=True,upload_to='course-images')
     title = models.CharField(max_length=100,null=True, blank=True)
     description = models.TextField(null=True, blank=True)
     price = models.DecimalField(max_digits=12, decimal_places=2,default=0.00,blank=True)
@@ -136,7 +136,7 @@ class Course(models.Model):
     teacher_course_status = models.CharField(choices=TEACHER_STATUS,default="Published",max_length=100)
     featured = models.BooleanField(default=False)
     course_id = ShortUUIDField(unique=True, null=True,blank=True)
-    slug = models.SlugField(unique=True, null=True, blank=True)
+    slug = models.SlugField(unique=True, null=True, blank=True,max_length=300)
     date = models.DateTimeField(default=timezone.now)
 
     def __str__(self):
@@ -146,12 +146,12 @@ class Course(models.Model):
             if not self.slug:
                 self.slug = slugify(self.title) 
             
-                super(Course,self).save(*args, **kwargs)
+            super(Course,self).save(*args, **kwargs)
     
     def students(self):
         return EnrolledCourse.objects.filter(course=self)
     
-    def curriculam(self):
+    def curriculum(self):
         return Variant.objects.filter(course=self)
 
     def lectures(self):
@@ -176,7 +176,7 @@ class Variant(models.Model):
     def __str__(self):
         return  self.title
     
-    def variant_item(self):
+    def variant_items(self):
         return VariantItem.objects.filter(variant=self)
     
     def items(self):
@@ -185,10 +185,19 @@ class Variant(models.Model):
 
 
 class VariantItem(models.Model):
-    variant = models.ForeignKey(Variant,on_delete=models.CASCADE,related_name="variant_items")
+    course = models.ForeignKey(Course, on_delete=models.CASCADE)
+    variant = ChainedForeignKey(
+        Variant,
+        chained_field="course",
+        chained_model_field="course",
+        show_all=False,
+        auto_choose=True,
+        sort=True,
+        on_delete=models.CASCADE
+    )
     title = models.CharField(max_length=1000)
     description = models.TextField(null=True,blank=True)
-    file = models.CharField(max_length=200)
+    file = models.CharField(max_length=200,null=True, blank=True)
     duration = models.DurationField(null=True,blank=True)
     content_duration = models.CharField(max_length=1000, null=True,blank=True)
     preview = models.BooleanField(default=False)

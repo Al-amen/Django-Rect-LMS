@@ -98,7 +98,7 @@ class VariantSerializer(serializers.ModelSerializer):
         model = api_models.Variant
 
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs): 
         super(VariantSerializer, self).__init__(*args, **kwargs)
         request = self.context.get("request")
         if request and request.method == "POST":
