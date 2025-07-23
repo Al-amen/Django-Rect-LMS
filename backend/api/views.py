@@ -347,7 +347,7 @@ class CreateOrderAPIView(generics.CreateAPIView):
         cart_id = request.data['cart_id']
         user_id = request.user.id
         
-        if user_id:
+        if user_id != 0:
             user = User.objects.get(id=user_id)
         else:
             user = None

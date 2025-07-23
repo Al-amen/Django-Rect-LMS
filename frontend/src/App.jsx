@@ -15,16 +15,24 @@ import apiInstance from './utils/axios';
 import CartId from './views/plugin/CartId';
 import { CartContext } from './views/plugin/Context';
 import Cart from './views/base/Cart';
+import Checkout from './views/base/Checkout';
 function App() {
 
  const [cartCount, setCartCount] = useState(0);
  const [profile,setProfile] = useState([]);
 
- useEffect(()=>{
-  apiInstance.get(`course/cart-list/${CartId()}`).then((res)=>{
-    setCartCount(res.data?.length);
-  });
- },[]);
+ const fetchCartCount = () => {
+  apiInstance.get(`course/cart-list/${CartId()}`)
+    .then((res) => {
+      setCartCount(res.data?.length);
+    })
+    .catch(() => {
+      setCartCount(0); // fallback
+    });
+};
+useEffect(() => {
+  fetchCartCount();
+}, []);
 
   return (
     <CartContext.Provider value={[cartCount,setCartCount]}>
@@ -36,6 +44,7 @@ function App() {
             <Route path='/logout/' element={<Logout/>} />
             <Route path='/forgot-password/' element={<ForgotPassword/>} />
             <Route path='/create-new-password/' element={<CreateNewPassword/>} />
+            <Route path="/checkout/:order_oid/" element={<Checkout />} />
 
 
 

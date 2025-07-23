@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import moment from "moment";
 import BaseHeader from "../partials/BaseHeader";
@@ -8,6 +8,7 @@ import GetCurrentAddress from "../plugin/UserCountry";
 import UserData from "../plugin/UserData";
 import CartId from "../plugin/CartId";
 import Toast from "../plugin/Toast";
+import { CartContext } from "../plugin/Context";
 
 function CourseDetail() {
   const [course, setCourse] = useState([]);
@@ -15,6 +16,7 @@ function CourseDetail() {
   const [addToCartBtn, setAddToCartBtn] = useState("Add To Cart");
   const [cartId] = useState(() => CartId());
   const param = useParams();
+  const [cartCount,setCartCount] = useContext(CartContext);
 
   const country = GetCurrentAddress().country;
   const userId = UserData()?.user_id || 0;
@@ -51,6 +53,11 @@ function CourseDetail() {
           title: "Added To Cart",
           icon: "success",
         });
+         // Set cart count after adding to cart
+        //  apiInstance.get(`course/cart-list/${CartId()}/`).then((res) => {
+        //   setCartCount(res.data?.length);
+        // });
+        setCartCount((prevCount) => Math.max(prevCount + 1, 0));
       });
     } catch (error) {
       console.log(error);

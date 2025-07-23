@@ -1,8 +1,11 @@
-import React from "react";
+import React, { useContext } from "react";
 import { Link } from "react-router-dom";
 import { useAuthStore } from "../../store/auth";
+import { CartContext } from "../plugin/Context";
 
 function BaseHeader() {
+    
+    const [cartCount,setCartCount] = useContext(CartContext)
     const allUserData = useAuthStore((state) => state.allUserData);
     const loggedIn = allUserData !== null;
     const user = {
@@ -199,7 +202,7 @@ function BaseHeader() {
             )}
            
             <Link className="btn btn-success ms-2" to="/cart/">
-              Cart (3) <i className="fas fa-shopping-cart"> </i>
+              Cart ({cartCount}) <i className="fas fa-shopping-cart"> </i>
             </Link>
           </div>
         </div>

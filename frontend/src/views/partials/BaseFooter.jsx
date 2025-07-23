@@ -164,7 +164,7 @@ function BaseFooter() {
               <div className="me-4">
                 <span>
                   ©<span id="copyright5"></span>
-                  Desphixs
+                  Al-Amen
                 </span>
               </div>
               <div>

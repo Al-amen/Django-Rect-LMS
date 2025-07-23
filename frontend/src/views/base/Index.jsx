@@ -54,10 +54,10 @@ function Index() {
           icon: "success",
         });
       });
-      apiInstance.get(`course/cart-list/${cartId()}/`).then((res) => {
-        setCartCount(res.data?.length);
-      });
-    } catch (error) {}
+      setCartCount((prevCount) => Math.max(prevCount + 1, 0));
+    } catch (error) {
+      console.log(error)
+    }
   };
 
   //Pagination
