@@ -409,7 +409,7 @@ class EnrolledCourse(models.Model):
         return CompletedLesson.objects.filter(course=self.course, user=self.user)
 
     def curriculum(self):
-        return Variant.objects.filter(variant__course=self.course)
+        return Variant.objects.filter(course=self.course)
     
     def note(self):
         return Note.objects.filter(course=self.course, user=self.user)
@@ -418,7 +418,7 @@ class EnrolledCourse(models.Model):
         return QuestionAnswer.objects.filter(course=self.course)
     
     def review(self):
-        return Review.objects.filter(course=self.course, user=self.user)
+        return Review.objects.filter(course=self.course, user=self.user).first()
     
 
 
