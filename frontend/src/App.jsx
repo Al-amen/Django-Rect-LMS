@@ -17,6 +17,7 @@ import { CartContext } from './views/plugin/Context';
 import Cart from './views/base/Cart';
 import Checkout from './views/base/Checkout';
 import Success from './views/base/Success';
+import Search from './views/base/Search';
 function App() {
 
  const [cartCount, setCartCount] = useState(0);
@@ -54,6 +55,8 @@ useEffect(() => {
             <Route path='/cart/' element={<Cart/>} />
             <Route path="/checkout/:order_oid/" element={<Checkout />} />
             <Route path='payment-success/:order_oid/' element={<Success/>} />
+            <Route path='search/' element={<Search/>} />
+
 
 
           </Routes>

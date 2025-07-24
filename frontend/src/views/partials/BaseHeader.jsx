@@ -1,5 +1,5 @@
-import React, { useContext } from "react";
-import { Link } from "react-router-dom";
+import React, { useContext, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { useAuthStore } from "../../store/auth";
 import { CartContext } from "../plugin/Context";
 
@@ -12,6 +12,11 @@ function BaseHeader() {
       user_id: allUserData?.user_id || null,
       username: allUserData?.username || null,
     };
+    const [searchQuery, setSearchQuery] = useState("");
+    const navigate = useNavigate();
+    const handleSearchSubmit = () => {
+      navigate(`/search/?search=${searchQuery}`);
+    }
   return (
     <div>
       <nav
@@ -160,17 +165,18 @@ function BaseHeader() {
                 </ul>
               </li>
             </ul>
-            <form className="d-flex" role="search">
+            <div className="d-flex" role="search">
               <input
                 className="form-control me-2 w-100"
                 type="search"
                 placeholder="Search Courses"
                 aria-label="Search Courses"
+                onChange={(e)=>setSearchQuery(e.target.value)}
               />
-              <button className="btn btn-outline-success w-50" type="submit">
+              <button onClick={handleSearchSubmit} className="btn btn-outline-success w-50" type="submit">
                 Search <i className="fas fa-search"></i>
               </button>
-            </form>
+            </div>
             {loggedIn ? (
               <>
                 <Link
