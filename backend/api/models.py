@@ -283,7 +283,7 @@ class Cart(models.Model):
 
 class CartOrder(models.Model):
     student = models.ForeignKey(User,on_delete=models.SET_NULL, null=True, blank=True)
-    teacher = models.ManyToManyField(Teacher, blank=True)
+    teachers = models.ManyToManyField(Teacher, blank=True)
     sub_total = models.DecimalField(max_digits=12, decimal_places=2, default=0.00, blank=True, null=True)
     tax_fee = models.DecimalField(max_digits=12, decimal_places=2, default=0.00, blank=True, null=True)
     intial_total = models.DecimalField(max_digits=12, decimal_places=2, default=0.00, blank=True, null=True)
@@ -293,7 +293,7 @@ class CartOrder(models.Model):
     full_name = models.CharField(max_length=100, null=True, blank=True)
     email = models.CharField(max_length=100, null=True, blank=True)
     country = models.CharField(max_length=100, null=True, blank=True)
-    coupons = models.CharField("api.Coupon", null=True, blank=True)
+    coupons = models.ManyToManyField("api.Coupon", null=True, blank=True)
     stripe_session_id = models.CharField(max_length=1000, null=True, blank=True)
     oid = ShortUUIDField(unique=True, length=6, max_length=20, alphabet="1234567890")
     date = models.DateTimeField(default=timezone.now)
@@ -363,7 +363,7 @@ class WishList(models.Model):
 
 class Country(models.Model):
     name = models.CharField(max_length=100)
-    taxt_rate = models.IntegerField(default=5)
+    tax_rate = models.IntegerField(default=5)
     active = models.BooleanField(default=True)
 
     def __str__(self):

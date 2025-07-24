@@ -16,6 +16,7 @@ import CartId from './views/plugin/CartId';
 import { CartContext } from './views/plugin/Context';
 import Cart from './views/base/Cart';
 import Checkout from './views/base/Checkout';
+import Success from './views/base/Success';
 function App() {
 
  const [cartCount, setCartCount] = useState(0);
@@ -44,13 +45,15 @@ useEffect(() => {
             <Route path='/logout/' element={<Logout/>} />
             <Route path='/forgot-password/' element={<ForgotPassword/>} />
             <Route path='/create-new-password/' element={<CreateNewPassword/>} />
-            <Route path="/checkout/:order_oid/" element={<Checkout />} />
+           
 
 
 
             <Route path="/" element={<Index/>} />
             <Route path="/course-detail/:slug/" element={<CourseDetail />} />
             <Route path='/cart/' element={<Cart/>} />
+            <Route path="/checkout/:order_oid/" element={<Checkout />} />
+            <Route path='payment-success/:order_oid/' element={<Success/>} />
 
 
           </Routes>
