@@ -398,6 +398,7 @@ class EnrolledCourse(models.Model):
     order_item = models.ForeignKey(CartOrderItem, on_delete=models.SET_NULL, null=True, blank=True)
     enrollment_id = ShortUUIDField(unique=True, length=6, max_length=20, alphabet="1234567890")
     date = models.DateTimeField(default=timezone.now)
+    
 
     def __str__(self):
         return self.course.title
@@ -431,7 +432,7 @@ class Note(models.Model):
     date = models.DateTimeField(default=timezone.now)
 
     def __str__(self):
-        self.title
+        return f"{self.user.email if self.user else 'Unknown'} - {self.title or 'Untitled Note'}"
 
 class Review(models.Model):
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)

@@ -654,21 +654,34 @@ class StudentNoteCreateAPIView(generics.ListCreateAPIView):
     permission_classes = [AllowAny]
 
     def get_queryset(self):
-        
-        user_id = self.kwargs['user_id']
-        enrollment_id = self.kwargs['enrollment_id']
-        user = User.objects.get(id=user_id)
-        enrolled = api_models.EnrolledCourse.objects.get(enrollment_id=enrollment_id)
-        return api_models.Note.objects.filter(user=user,course=enrolled.course)
-    
-    def create(self, request, *args, **kwargs):
-        user_id = request.data['user_id']
-        enrolment_id = request.data['enrollment_id']
-        title = request.data['title']
-        note = request.data['note']
+        user_id = self.kwargs.get("user_id")
+        enrollment_id = self.kwargs.get("enrollment_id")
 
-        user = User.objects.get(id=user_id)
-        enrolled = api_models.EnrolledCourse.objects.get(enrolment_id=enrolment_id)
+        try:
+            user = User.objects.get(id=user_id)
+            enrolled = api_models.EnrolledCourse.objects.get(enrollment_id=enrollment_id)
+        except User.DoesNotExist:
+            return api_models.Note.objects.none()
+        except api_models.EnrolledCourse.DoesNotExist:
+            return api_models.Note.objects.none()
+
+        return api_models.Note.objects.filter(user=user, course=enrolled.course)
+
+    def create(self, request, *args, **kwargs):
+        user_id = request.data.get("user_id")
+        enrollment_id = request.data.get("enrollment_id")
+        title = request.data.get("title")
+        note = request.data.get("note")
+
+        try:
+            user = User.objects.get(id=user_id)
+        except User.DoesNotExist:
+            return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        try:
+            enrolled = api_models.EnrolledCourse.objects.get(enrollment_id=enrollment_id)
+        except api_models.EnrolledCourse.DoesNotExist:
+            return Response({"error": "Enrollment not found"}, status=status.HTTP_404_NOT_FOUND)
 
         api_models.Note.objects.create(
             user=user,
@@ -676,7 +689,9 @@ class StudentNoteCreateAPIView(generics.ListCreateAPIView):
             title=title,
             note=note
         )
-        return Response({"message":"Note Created Successfully"},status=status.HTTP_201_CREATED)
+
+        return Response({"message": "Note Created Successfully"}, status=status.HTTP_201_CREATED)
+
     
 
 class StudentNoteDetailAPIView(generics.RetrieveUpdateDestroyAPIView):

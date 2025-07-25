@@ -19,6 +19,7 @@ import Checkout from './views/base/Checkout';
 import Success from './views/base/Success';
 import Search from './views/base/Search';
 import ChangePassword from './views/student/ChangePassword';
+import Dashboard from './views/student/Dashboard';
 function App() {
 
  const [cartCount, setCartCount] = useState(0);
@@ -60,8 +61,9 @@ useEffect(() => {
 
 
             {/* students routes */}
+            <Route path="/student/dashboard/" element={ <Dashboard/> } />
 
-            <Route path='/student/change-password' element={ <ChangePassword/> }  />
+            <Route path='/student/change-password/' element={ <ChangePassword/> }  />
 
 
 
