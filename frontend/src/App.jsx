@@ -18,6 +18,7 @@ import Cart from './views/base/Cart';
 import Checkout from './views/base/Checkout';
 import Success from './views/base/Success';
 import Search from './views/base/Search';
+import ChangePassword from './views/student/ChangePassword';
 function App() {
 
  const [cartCount, setCartCount] = useState(0);
@@ -56,6 +57,11 @@ useEffect(() => {
             <Route path="/checkout/:order_oid/" element={<Checkout />} />
             <Route path='payment-success/:order_oid/' element={<Success/>} />
             <Route path='search/' element={<Search/>} />
+
+
+            {/* students routes */}
+
+            <Route path='/student/change-password' element={ <ChangePassword/> }  />
 
 
 
