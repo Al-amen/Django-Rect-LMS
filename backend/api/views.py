@@ -633,7 +633,8 @@ class StudentCourseCompletedCreateAPIView(generics.CreateAPIView):
         course_id = request.data['course_id']
         variant_item_id = request.data['variant_item_id']
 
-        user = User.object.get(id=user_id)
+
+        user = User.objects.get(id=user_id)
         course = api_models.Course.objects.get(id=course_id)
         variant_item = api_models.VariantItem.objects.get(variant_item_id=variant_item_id)
         completed_lesson = api_models.CompletedLesson.objects.filter(user=user, course=course, variant_item=variant_item).first()

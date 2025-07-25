@@ -201,7 +201,7 @@ class VariantItem(models.Model):
     duration = models.DurationField(null=True,blank=True)
     content_duration = models.CharField(max_length=1000, null=True,blank=True)
     preview = models.BooleanField(default=False)
-    varient_item_id = ShortUUIDField(unique=True,max_length=20,length=6, alphabet="1234567890")
+    variant_item_id = ShortUUIDField(unique=True,max_length=20,length=6, alphabet="1234567890")
     date = models.DateTimeField(default=timezone.now)
 
     def __str__(self):
@@ -384,7 +384,7 @@ class Certificate(models.Model):
 class CompletedLesson(models.Model):
     course = models.ForeignKey(Course,on_delete=models.CASCADE)
     user = models.ForeignKey(User,on_delete=models.SET_NULL, null=True, blank=True)
-    varient_item = models.ForeignKey(VariantItem, on_delete=models.CASCADE)
+    variant_item = models.ForeignKey(VariantItem, on_delete=models.CASCADE)
     date = models.DateTimeField(default=timezone.now)
 
     def __str__(self):
