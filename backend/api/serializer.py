@@ -116,9 +116,9 @@ class QuestionAnswerMessageSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class QuestionAnswerSerializer(serializers.ModelSerializer):
-    message = QuestionAnswerMessageSerializer(many=True)
+    messages = QuestionAnswerMessageSerializer(many=True)
     profile  = ProfileSerializer(many=False)
- 
+
     class Meta:
         model = api_models.QuestionAnswer
         fields = '__all__'

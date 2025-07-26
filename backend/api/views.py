@@ -12,7 +12,7 @@ from django.shortcuts import get_object_or_404
 from django.core.files.uploadedfile import InMemoryUploadedFile
 import requests
 from rest_framework.exceptions import ValidationError
-
+from rest_framework.exceptions import NotFound
 
 from api import models as api_models
 from api import serializer as api_serializer
@@ -696,18 +696,32 @@ class StudentNoteCreateAPIView(generics.ListCreateAPIView):
 
 class StudentNoteDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = api_serializer.NoteSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
 
     def get_object(self):
-        user_id = self.kwargs['user_id']
-        enrollment_id = self.kwargs['enrollment_id']
-        note_id = self.kwargs['note_id']
+        user_id = self.kwargs.get("user_id")
+        enrollment_id = self.kwargs.get("enrollment_id")
+        note_id = self.kwargs.get("note_id")
 
-        user = User.objects.get(id=user_id)
-        enrolled = api_models.EnrolledCourse.objects.get(enrollment_id=enrollment_id)
-        note = api_models.Note.objects.get(user=user,course=enrolled.course,id=note_id)
+        # 1. Check if User exists
+        try:
+            user = User.objects.get(id=user_id)
+        except User.DoesNotExist:
+            raise NotFound(detail="User not found")
+
+        # 2. Check if EnrolledCourse exists
+        try:
+            enrolled = api_models.EnrolledCourse.objects.get(enrollment_id=enrollment_id)
+        except api_models.EnrolledCourse.DoesNotExist:
+            raise NotFound(detail="Enrolled course not found")
+
+        # 3. Get the Note
+        try:
+            note = api_models.Note.objects.get(user=user, course=enrolled.course, note_id=note_id)
+        except api_models.Note.DoesNotExist:
+            raise NotFound(detail="Note not found")
+
         return note
-    
 
 class StudentRateCourseCreateAPIView(generics.CreateAPIView):
     serializer_class = api_serializer.ReviewSerializer
@@ -813,25 +827,29 @@ class QuestionAnswerMessageSendAPIView(generics.CreateAPIView):
     permission_classes = [AllowAny]
 
     def create(self, request, *args, **kwargs):
-       course_id = request.data['course_id']
-       qa_id = request.data['qa_id']
-       user_id = request.data['user_id']
-       message = request.data['message']
+        course_id = request.data['course_id']
+        qa_id = request.data['qa_id']
+        user_id = request.data['user_id']
+        message = request.data['message']
 
-       user = User.objects.get(id=user_id)
-       course = api_models.Course.objects.get(id=course_id)
-       question = api_models.QuestionAnswer.objects.get(qa_id=qa_id)
-       api_models.QuestionAnswerMessage.objects.create(
-           course=course,
-           user=user,
-           message=message,
-           question=question
-       )
+        user = User.objects.get(id=user_id)
+        course = api_models.Course.objects.get(id=course_id)
+        question = api_models.QuestionAnswer.objects.get(qa_id=qa_id)
 
-       question_serializer = api_serializer.QuestionAnswerMessageSerializer(question)
+        api_models.QuestionAnswerMessage.objects.create(
+            course=course,
+            user=user,
+            message=message,
+            question=question
+        )
 
-       return Response({"message":"Message sent","question":question_serializer.data})
-    
+        # ✅ Use the correct serializer here
+        question_serializer = api_serializer.QuestionAnswerSerializer(question)
+
+        return Response({
+            "message": "Message sent",
+            "question": question_serializer.data
+        })
 
 
 class TeacherSummaryAPIView(generics.ListAPIView):
