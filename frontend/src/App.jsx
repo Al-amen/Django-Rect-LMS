@@ -18,8 +18,9 @@ import Cart from './views/base/Cart';
 import Checkout from './views/base/Checkout';
 import Success from './views/base/Success';
 import Search from './views/base/Search';
-import ChangePassword from './views/student/ChangePassword';
-import Dashboard from './views/student/Dashboard';
+import StudentChangePassword from './views/student/ChangePassword';
+import StudentDashboard from './views/student/Dashboard';
+import StudentCourses from './views/student/Courses';
 function App() {
 
  const [cartCount, setCartCount] = useState(0);
@@ -61,9 +62,9 @@ useEffect(() => {
 
 
             {/* students routes */}
-            <Route path="/student/dashboard/" element={ <Dashboard/> } />
-
-            <Route path='/student/change-password/' element={ <ChangePassword/> }  />
+            <Route path="/student/dashboard/" element={ <StudentDashboard/> } />
+            <Route path='/student/change-password/' element={ <StudentChangePassword/> }  />
+            <Route path='/student/courses/' element={ < StudentCourses/>} />
 
 
 

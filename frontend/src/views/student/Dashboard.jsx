@@ -203,8 +203,10 @@ function Dashboard() {
                                               </td>
                                           </tr>
                                           ))}
+                                         
                                         </tbody>
                                     </table>
+                                    {courses?.length < 1 && <p className="mt-4 p-4">No courses found</p>}
                                 </div>
                             </div>
                             )}
