@@ -733,7 +733,7 @@ class StudentRateCourseCreateAPIView(generics.CreateAPIView):
         rating = request.data['rating']
         review = request.data['review']
 
-        user = user.objects.get(id=user_id)
+        user = User.objects.get(id=user_id)
         course = api_models.Course.objects.get(id=course_id)
 
         api_models.Review.objects.create(

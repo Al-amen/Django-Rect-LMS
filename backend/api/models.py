@@ -403,7 +403,7 @@ class EnrolledCourse(models.Model):
     def __str__(self):
         return self.course.title
     
-    def lecture_count(self):
+    def lectures(self):
         return VariantItem.objects.filter(variant__course=self.course)
     
     def completed_lesson(self):
