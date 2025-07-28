@@ -3,7 +3,8 @@ from userauths.models import User,Profile
 from django.utils.text import slugify
 from shortuuid.django_fields import ShortUUIDField
 from django.utils import timezone
-#from moviepy.editor import VideoFileClip
+from moviepy import VideoFileClip
+import math
 from smart_selects.db_fields import ChainedForeignKey
 
 
@@ -207,21 +208,21 @@ class VariantItem(models.Model):
     def __str__(self):
         return f"{self.variant.title} - {self.title}"
     
-     # def save(self, *args, **kwargs):
-    #     super().save(*args, **kwargs)
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
 
-    #     if self.file:
-    #         clip = VideoFileClip(self.file.path)
-    #         duration_seconds = clip.duration
+        if self.file:
+            clip = VideoFileClip(self.file.path)
+            duration_seconds = clip.duration
 
-    #         minutes, remainder = divmod(duration_seconds, 60)  
+            minutes, remainder = divmod(duration_seconds, 60)  
 
-    #         minutes = math.floor(minutes)
-    #         seconds = math.floor(remainder)
+            minutes = math.floor(minutes)
+            seconds = math.floor(remainder)
 
-    #         duration_text = f"{minutes}m {seconds}s"
-    #         self.content_duration = duration_text
-    #         super().save(update_fields=['content_duration'])
+            duration_text = f"{minutes}m {seconds}s"
+            self.content_duration = duration_text
+            super().save(update_fields=['content_duration'])
     
 
 class QuestionAnswer(models.Model):

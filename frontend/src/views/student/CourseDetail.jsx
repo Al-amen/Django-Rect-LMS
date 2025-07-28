@@ -15,7 +15,9 @@ import { useParams } from "react-router-dom";
 function CourseDetail() {
   const [course, setCourse] = useState([]);
   const [show, setShow] = useState(false);
-  const [variantItem,setVariantItem] = useState(null);
+  const [variantItem, setVariantItem] = useState(null);
+  const [completionPercentage, setCompletionPercentage] = useState(0);
+  const [markAsCompletedStatus, setMarkAsCompletedStatus] = useState({});
 
   // play lecture model
   const handleClose = () => setShow(false);
@@ -23,7 +25,7 @@ function CourseDetail() {
     setShow(true);
     setVariantItem(variant_item);
   };
- // console.log("variant_item", variantItem.title);
+  // console.log("variant_item", variantItem.title);
 
   const [noteShow, setNoteShow] = useState(false);
   const handleNoteClose = () => setNoteShow(false);
@@ -38,7 +40,7 @@ function CourseDetail() {
   };
 
   const param = useParams();
-  console.log("enrollment_id", param.enrollment_id);
+  // console.log("enrollment_id", param.enrollment_id);
 
   const fetchCourseDetail = async () => {
     useAxios
@@ -47,6 +49,9 @@ function CourseDetail() {
       )
       .then((res) => {
         setCourse(res.data);
+        const percentageCompleted =
+          (res.data.completed_lesson?.length / res.data.lectures?.length) * 100;
+        setCompletionPercentage(percentageCompleted.toFixed(0));
         console.log("course", res.data);
       });
   };
@@ -54,6 +59,28 @@ function CourseDetail() {
   useEffect(() => {
     fetchCourseDetail();
   }, []);
+  console.log("variant_item", variantItem?.file);
+
+  const handleMarkLessonAsCompleted = (variantItemId) => {
+    const key = `lecture_${variantItemId}`;
+    setMarkAsCompletedStatus({
+      ...markAsCompletedStatus,
+      [key]: "Updaing",
+    });
+    const formdata = new FormData();
+    formdata.append("user_id", UserData()?.user_id || 0);
+    formdata.append("course_id", course.course?.id);
+    formdata.append("variant_item_id", variantItemId);
+    useAxios.post(`student/course-completed/`, formdata).then((res) => {
+      fetchCourseDetail();
+      setMarkAsCompletedStatus({
+        ...markAsCompletedStatus,
+        [key]: "Updated",
+      });
+    });
+  };
+  console.log("Can play video:", ReactPlayer.canPlay(variantItem?.file));
+  console.log("variant item file:", ReactPlayer.canPlay(variantItem?.file));
 
   return (
     <>
@@ -182,17 +209,22 @@ function CourseDetail() {
                                   <div
                                     className="progress-bar"
                                     role="progressbar"
-                                    style={{ width: `${25}%` }}
-                                    aria-valuenow={25}
+                                    style={{
+                                      width: `${completionPercentage}%`,
+                                    }}
+                                    aria-valuenow={completionPercentage}
                                     aria-valuemin={0}
                                     aria-valuemax={100}
                                   >
-                                    25%
+                                    {completionPercentage}%
                                   </div>
                                 </div>
                                 {/* Item */}
                                 {course?.curriculum?.map((c, index) => (
-                                  <div className="accordion-item mb-3 p-3 bg-light">
+                                  <div
+                                    key={index}
+                                    className="accordion-item mb-3 p-3 bg-light"
+                                  >
                                     <h6
                                       className="accordion-header font-base"
                                       id="heading-1"
@@ -226,7 +258,7 @@ function CourseDetail() {
                                             <div className="d-flex justify-content-between align-items-center">
                                               <div className="position-relative d-flex align-items-center">
                                                 <button
-                                                   onClick={() => handleShow(l)}
+                                                  onClick={() => handleShow(l)}
                                                   className="btn btn-danger-soft btn-round btn-sm mb-0 stretched-link position-static"
                                                 >
                                                   <i className="fas fa-play me-0" />
@@ -245,11 +277,11 @@ function CourseDetail() {
                                                   className="form-check-input ms-2"
                                                   name=""
                                                   id=""
-                                                  // onChange={() =>
-                                                  //   handleMarkLessonAsCompleted(
-                                                  //     l.variant_item_id
-                                                  //   )
-                                                  // }
+                                                  onChange={() =>
+                                                    handleMarkLessonAsCompleted(
+                                                      l.variant_item_id
+                                                    )
+                                                  }
                                                   checked={course.completed_lesson?.some(
                                                     (cl) =>
                                                       cl.variant_item.id ===
@@ -560,17 +592,26 @@ function CourseDetail() {
       </section>
 
       {/* Lecture Modal */}
-      <Modal show={show} size="lg" onHide={handleClose}>
+      <Modal
+        show={show}
+        size="lg"
+        onHide={handleClose}
+        key={variantItem?.id || "modal"}
+      >
         <Modal.Header closeButton>
-          <Modal.Title>Lesson: {variantItem?.title}</Modal.Title>
+          <Modal.Title>
+            Lesson: {variantItem?.title || "Loading..."}
+          </Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          <ReactPlayer
-            url={variantItem?.file}
-            controls
-            width={"100%"}
-            height={"100%"}
-          />
+          {variantItem?.file ? (
+            <video width="100%" height="100%" controls>
+            <source src={variantItem?.file} type="video/mp4" />
+            Your browser does not support the video tag.
+          </video>
+          ) : (
+            <p>Loading video or no video available...</p>
+          )}
         </Modal.Body>
         <Modal.Footer>
           <Button variant="secondary" onClick={handleClose}>

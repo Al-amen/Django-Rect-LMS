@@ -13,7 +13,7 @@ from django.core.files.uploadedfile import InMemoryUploadedFile
 import requests
 from rest_framework.exceptions import ValidationError
 from rest_framework.exceptions import NotFound
-
+from moviepy import VideoFileClip
 from api import models as api_models
 from api import serializer as api_serializer
 from userauths.models import Profile, User
@@ -609,7 +609,7 @@ class StudentCourseListAPIView(generics.ListAPIView):
         user_id = self.kwargs['user_id']
         user = User.objects.get(id=user_id)
         return api_models.EnrolledCourse.objects.filter(user=user)
-        
+
 class StudentCourseDetailAPIView(generics.RetrieveAPIView):
          serializer_class = api_serializer.EnrolledCourseSerializer
          permission_classes = [AllowAny]
@@ -1267,26 +1267,28 @@ class CourseVariantItemDeleteAPIVIew(generics.DestroyAPIView):
         return api_models.VariantItem.objects.get(variant=variant,variant_item_id=variant_item_id)
 
 
+
 class FileUploadAPIView(APIView):
     permission_classes = [AllowAny]
-    parser_classes = [MultiPartParser,FormParser]
+    parser_classes = (MultiPartParser, FormParser,)  # Allow file uploads
 
     @swagger_auto_schema(
-        operation_description='Upload a file',
-        request_body=api_serializer.FileUploadSerializer,
+        operation_description="Upload a file",
+        request_body=api_serializer.FileUploadSerializer,  # Use the serializer here
         responses={
-            200:openapi.Response('File upload successfully',openapi.Schema(type=openapi.TYPE_OBJECT)),
-            400: openapi.Response('No file provided',openapi.Schema(type=openapi.TYPE_OBJECT)),
-
+            200: openapi.Response('File uploaded successfully', openapi.Schema(type=openapi.TYPE_OBJECT)),
+            400: openapi.Response('No file provided', openapi.Schema(type=openapi.TYPE_OBJECT)),
         }
     )
 
-    def post(self,request):
-        serializer = api_serializer.FileUploadSerializer(data=request.data)
+    def post(self, request):
+        
+        serializer = api_serializer.FileUploadSerializer(data=request.data)  
 
         if serializer.is_valid():
-            file = serializer.validated_data.get('file')
+            file = serializer.validated_data.get("file")
 
+            # Save the file to the media directory
             file_path = default_storage.save(file.name, ContentFile(file.read()))
             file_url = request.build_absolute_uri(default_storage.url(file_path))
 
@@ -1294,8 +1296,8 @@ class FileUploadAPIView(APIView):
             if file.name.endswith(('.mp4', '.avi', '.mov', '.mkv')):
                 # Calculate the video duration
                 file_full_path = os.path.join(default_storage.location, file_path)
-                probe = ffmpeg.probe(file_full_path)
-                duration_seconds = probe['format']['duration']
+                clip = VideoFileClip(file_full_path)
+                duration_seconds = clip.duration
 
                 # Calculate minutes and seconds
                 minutes, remainder = divmod(duration_seconds, 60)
@@ -1319,5 +1321,4 @@ class FileUploadAPIView(APIView):
             })
 
         return Response({"error": "No file provided"}, status=400)
-
 
