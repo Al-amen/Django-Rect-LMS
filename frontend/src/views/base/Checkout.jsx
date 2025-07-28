@@ -253,50 +253,45 @@ function Checkout() {
 
                     <div className="p-3 shadow rounded-3 mt-3">
                       <h4 className="mb-3">Cart Total</h4>
-                      <ul class="list-group mb-3">
+                      <ul className="list-group mb-3">
                         <li class="list-group-item d-flex justify-content-between align-items-center">
                           Sub Total
                           <span>${order.sub_total}</span>
                         </li>
-                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <li className="list-group-item d-flex justify-content-between align-items-center">
                           Discount
                           <span>${order.saved}</span>
                         </li>
-                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <li className="list-group-item d-flex justify-content-between align-items-center">
                           Tax
                           <span>${order.tax_fee}</span>
                         </li>
-                        <li class="list-group-item d-flex fw-bold justify-content-between align-items-center">
+                        <li className="list-group-item d-flex fw-bold justify-content-between align-items-center">
                           Total
                           <span className="fw-bold">${order.total}</span>
                         </li>
                       </ul>
                       <div className="d-grid">
                         <form
-                          action={`http://127.0.0.1:8000/api/v1/payment/stripe-checkout/${order.oid}/`}
-                          className="w-100"
+                          action={`http://127.0.0.1:8000/api/v1/payment/stripe-checkout/${order?.oid}/`}
                           method="POST"
+                          className="w-100"
                         >
-                          {paymentLoading === true ? (
-                            <button
-                              type="submit"
-                              disabled
-                              className="btn btn-lg btn-success mt-2 w-100"
-                            >
-                              {" "}
-                              Processing{" "}
-                              <i className="fas fa-spinner f a-spin"></i>
-                            </button>
-                          ) : (
-                            <button
-                              type="submit"
-                              onClick={payWithStripe}
-                              className="btn btn-lg btn-success mt-2 w-100"
-                            >
-                              {" "}
-                              Pay With Stripe
-                            </button>
-                          )}
+                          <button
+                            type="submit"
+                            disabled={paymentLoading}
+                            onClick={payWithStripe}
+                            className="btn btn-lg btn-success mt-2 w-100"
+                          >
+                            {paymentLoading ? (
+                              <>
+                                Processing{" "}
+                                <i className="fas fa-spinner fa-spin"></i>
+                              </>
+                            ) : (
+                              "Pay With Stripe"
+                            )}
+                          </button>
                         </form>
                         <PayPalScriptProvider options={initialOptions}>
                           <PayPalButtons

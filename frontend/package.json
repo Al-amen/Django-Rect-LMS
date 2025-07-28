@@ -19,6 +19,7 @@
     "react": "^19.1.0",
     "react-bootstrap": "^2.10.10",
     "react-dom": "^19.1.0",
+    "react-player": "^3.3.1",
     "react-rater": "^6.0.5",
     "react-router": "^7.6.3",
     "react-router-dom": "^7.6.3",

@@ -197,7 +197,7 @@ class VariantItem(models.Model):
     )
     title = models.CharField(max_length=1000)
     description = models.TextField(null=True,blank=True)
-    file = models.CharField(max_length=200,null=True, blank=True)
+    file = models.FileField(upload_to='course-file', null=True, blank=True)
     duration = models.DurationField(null=True,blank=True)
     content_duration = models.CharField(max_length=1000, null=True,blank=True)
     preview = models.BooleanField(default=False)
@@ -336,7 +336,7 @@ class CartOrderItem(models.Model):
         return f"{self.order.payment_status}"
     
     def __str__(self):
-        return self.oid
+        return  self.oid +  f" - {self.course.title} ({self.teacher.full_name})" if self.teacher else f"{self.oid} - {self.course.title}"
     
 
 class Coupon(models.Model):
