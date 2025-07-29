@@ -32,6 +32,9 @@ function CourseDetail() {
   });
   const [questions, setQuestions] = useState([]);
   const [selectedConversation, setSelectedConversation] = useState(null);
+  const [createReview, setCreateReview] = useState({ rating: 1, review: "" });
+  const [studentReview, setStudentReview] = useState([]);
+
 
 
 
@@ -92,7 +95,7 @@ function CourseDetail() {
     fetchCourseDetail();
   }, []);
   console.log("Course", course);
-  console.log("selectedConversation", selectedConversation?.title);
+  console.log(createReview?.rating);
 
   const handleMarkLessonAsCompleted = (variantItemId) => {
     const key = `lecture_${variantItemId}`;
@@ -231,7 +234,18 @@ function CourseDetail() {
   },[selectedConversation]);
 
   
-
+// search questions
+const handleSearchQuestion = (event) => {
+  const query = event.target.value.toLowerCase();
+  if (query === "") {
+      fetchCourseDetail();
+  } else {
+      const filtered = questions?.filter((question) => {
+          return question.title.toLowerCase().includes(query);
+      });
+      setQuestions(filtered);
+  }
+};
  
 
   return (
@@ -595,7 +609,7 @@ function CourseDetail() {
                                 <div className="card-header border-bottom p-0 pb-3">
                                   {/* Title */}
                                   <h4 className="mb-3 p-3">Discussion</h4>
-                                  <form className="row g-4 p-3">
+                                  <form  className="row g-4 p-3">
                                     {/* Search */}
                                     <div className="col-sm-6 col-lg-9">
                                       <div className="position-relative">
@@ -604,6 +618,7 @@ function CourseDetail() {
                                           type="search"
                                           placeholder="Search"
                                           aria-label="Search"
+                                          onChange={handleSearchQuestion}
                                         />
                                         <button
                                           className="bg-transparent p-2 position-absolute top-50 end-0 translate-middle-y border-0 text-primary-hover text-reset"
