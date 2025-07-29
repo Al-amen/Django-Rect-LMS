@@ -13,6 +13,7 @@ import "react-rater/lib/react-rater.css";
 
 function Index() {
   const [courses, setCourses] = useState([]);
+  const [wishlist, setWishlist] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [cartCount, setCartCount] = useContext(CartContext);
 
@@ -33,8 +34,19 @@ function Index() {
     }
   };
 
+  const fetchWishlist = async () => {
+  try {
+    if (!userId) return;
+    const res = await apiInstance.get(`student/wishlist/${userId}`);
+    setWishlist(res.data);
+  } catch (error) {
+    console.error("Error fetching wishlist", error);
+  }
+};
+
   useEffect(() => {
     fetchCourse();
+    fetchWishlist();
   }, []);
 
   const addToCart = async (courseId, userId, price, country, cartId) => {
@@ -53,6 +65,7 @@ function Index() {
           title: "Added To Cart",
           icon: "success",
         });
+
       });
       setCartCount((prevCount) => Math.max(prevCount + 1, 0));
     } catch (error) {
@@ -94,6 +107,7 @@ function Index() {
           icon: "success",
           title: res.data.message,
         });
+        fetchWishlist();
       })
       .catch((err) => {
         console.error(err);
@@ -259,12 +273,14 @@ function Index() {
                               {c.language}
                             </span>
                           </div>
-                          <a
-                            onClick={() => addToWishlist(c.id)}
-                            className="fs-5"
-                          >
-                            <i className="fas fa-heart text-danger align-middle" />
+                          <a onClick={() => addToWishlist(c.id)} className="fs-5">
+                            <i
+                              className={`${
+                                wishlist.some((item) => item.course.id === c.id) ? "fas" : "far"
+                              } fa-heart text-danger align-middle`}
+                            />
                           </a>
+
                         </div>
                         <h4 className="mb-2 text-truncate-line-2 ">
                           <Link

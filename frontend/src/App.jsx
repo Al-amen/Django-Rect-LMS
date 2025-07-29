@@ -22,6 +22,7 @@ import StudentChangePassword from './views/student/ChangePassword';
 import StudentDashboard from './views/student/Dashboard';
 import StudentCourses from './views/student/Courses';
 import StudentCourseDetail from './views/student/CourseDetail';
+import StudentWishlist from './views/student/Wishlist';
 function App() {
 
  const [cartCount, setCartCount] = useState(0);
@@ -67,6 +68,7 @@ useEffect(() => {
             <Route path='/student/change-password/' element={ <StudentChangePassword/> }  />
             <Route path='/student/courses/' element={ < StudentCourses/>} />
             <Route path='/student/courses/:enrollment_id/' element={< StudentCourseDetail />} />
+            <Route path='/student/wishlist/' element={< StudentWishlist />} />
 
 
 
