@@ -25,6 +25,14 @@ function CourseDetail() {
     note: "",
   })
   const [selectedNote, setSelectedNote] = useState(null);
+  const [createMessage,setCreateMessage] = useState({
+    title: "",
+    message: "",
+  });
+  const [ question, setQuestion ] = useState([])
+
+
+
 
   // play lecture model
   const handleClose = () => setShow(false);
@@ -55,6 +63,10 @@ function CourseDetail() {
 
   const param = useParams();
   // console.log("enrollment_id", param.enrollment_id);
+
+  const [addQuestionShow, setAddQuestionShow] = useState(false);
+    const handleQuestionClose = () => setAddQuestionShow(false);
+    const handleQuestionShow = () => setAddQuestionShow(true);
 
   const fetchCourseDetail = async () => {
     useAxios
@@ -162,6 +174,36 @@ function CourseDetail() {
         console.log(err);
       });
   }
+
+  // question operations
+  const handleMessageChange = (e) => {
+    setCreateMessage({
+      ...createMessage,
+      [e.target.name]: e.target.value,
+    });
+  }
+
+  const handleSaveQuestion = async (e) => {
+    e.preventDefault();
+    const formdata = new FormData();
+    formdata.append("course_id", course.course?.id);
+    formdata.append("user_id", UserData()?.user_id);
+    formdata.append("title", createMessage.title);
+    formdata.append("message", createMessage.message);
+
+      await useAxios.post(`student/question-answer-list-create/${course.course?.id}}/`, formdata)
+      .then((res) => {
+        fetchCourseDetail();
+        handleQuestionClose();
+        Toast().fire({
+          icon: "success",
+          title: "Question Sent Successfully",
+        });
+      });
+  };
+  
+
+ 
 
   return (
     <>
@@ -544,7 +586,7 @@ function CourseDetail() {
                                     </div>
                                     <div className="col-sm-6 col-lg-3">
                                       <a
-                                        href="#"
+                                        onClick={handleQuestionShow }
                                         className="btn btn-primary mb-0 w-100"
                                         data-bs-toggle="modal"
                                         data-bs-target="#modalCreatePost"
@@ -720,7 +762,7 @@ function CourseDetail() {
                 </Modal.Body>
             </Modal>
 
-      {/* Note Edit Modal */}
+      {/* Conversation */}
       <Modal show={ConversationShow} size="lg" onHide={handleConversationClose}>
         <Modal.Header closeButton>
           <Modal.Title>Lesson: 123</Modal.Title>
@@ -776,141 +818,7 @@ function CourseDetail() {
                 </div>
               </li>
 
-              <li className="comment-item mb-3">
-                <div className="d-flex">
-                  <div className="avatar avatar-sm flex-shrink-0">
-                    <a href="#">
-                      <img
-                        className="avatar-img rounded-circle"
-                        src="https://geeksui.codescandy.com/geeks/assets/images/avatar/avatar-3.jpg"
-                        style={{
-                          width: "40px",
-                          height: "40px",
-                          borderRadius: "50%",
-                          objectFit: "cover",
-                        }}
-                        alt="womans image"
-                      />
-                    </a>
-                  </div>
-                  <div className="ms-2">
-                    {/* Comment by */}
-                    <div className="bg-light p-3 rounded w-100">
-                      <div className="d-flex w-100 justify-content-center">
-                        <div className="me-2 ">
-                          <h6 className="mb-1 lead fw-bold">
-                            <a
-                              href="#!"
-                              className="text-decoration-none text-dark"
-                            >
-                              {" "}
-                              Louis Ferguson{" "}
-                            </a>
-                            <br />
-                            <span style={{ fontSize: "12px", color: "gray" }}>
-                              5hrs Ago
-                            </span>
-                          </h6>
-                          <p className="mb-0 mt-3  ">
-                            Removed demands expense account from the debby
-                            building in a hall town tak with
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </li>
-
-              <li className="comment-item mb-3">
-                <div className="d-flex">
-                  <div className="avatar avatar-sm flex-shrink-0">
-                    <a href="#">
-                      <img
-                        className="avatar-img rounded-circle"
-                        src="https://geeksui.codescandy.com/geeks/assets/images/avatar/avatar-3.jpg"
-                        style={{
-                          width: "40px",
-                          height: "40px",
-                          borderRadius: "50%",
-                          objectFit: "cover",
-                        }}
-                        alt="womans image"
-                      />
-                    </a>
-                  </div>
-                  <div className="ms-2">
-                    {/* Comment by */}
-                    <div className="bg-light p-3 rounded w-100">
-                      <div className="d-flex w-100 justify-content-center">
-                        <div className="me-2 ">
-                          <h6 className="mb-1 lead fw-bold">
-                            <a
-                              href="#!"
-                              className="text-decoration-none text-dark"
-                            >
-                              {" "}
-                              Louis Ferguson{" "}
-                            </a>
-                            <br />
-                            <span style={{ fontSize: "12px", color: "gray" }}>
-                              5hrs Ago
-                            </span>
-                          </h6>
-                          <p className="mb-0 mt-3  ">
-                            Removed demands expense account
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </li>
-
-              <li className="comment-item mb-3">
-                <div className="d-flex">
-                  <div className="avatar avatar-sm flex-shrink-0">
-                    <a href="#">
-                      <img
-                        className="avatar-img rounded-circle"
-                        src="https://geeksui.codescandy.com/geeks/assets/images/avatar/avatar-3.jpg"
-                        style={{
-                          width: "40px",
-                          height: "40px",
-                          borderRadius: "50%",
-                          objectFit: "cover",
-                        }}
-                        alt="womans image"
-                      />
-                    </a>
-                  </div>
-                  <div className="ms-2">
-                    {/* Comment by */}
-                    <div className="bg-light p-3 rounded w-100">
-                      <div className="d-flex w-100 justify-content-center">
-                        <div className="me-2 ">
-                          <h6 className="mb-1 lead fw-bold">
-                            <a
-                              href="#!"
-                              className="text-decoration-none text-dark"
-                            >
-                              {" "}
-                              Louis Ferguson{" "}
-                            </a>
-                            <br />
-                            <span style={{ fontSize: "12px", color: "gray" }}>
-                              5hrs Ago
-                            </span>
-                          </h6>
-                          <p className="mb-0 mt-3  ">
-                            Removed demands expense account
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </li>
+           
             </ul>
 
             <form class="w-100 d-flex">
@@ -926,28 +834,41 @@ function CourseDetail() {
               </button>
             </form>
 
-            <form class="w-100">
-              <input
-                name="title"
-                type="text"
-                className="form-control mb-2"
-                placeholder="Question Title"
-              />
-              <textarea
-                name="message"
-                class="one form-control pe-4 mb-2 bg-light"
-                id="autoheighttextarea"
-                rows="5"
-                placeholder="What's your question?"
-              ></textarea>
-              <button class="btn btn-primary mb-0 w-25" type="button">
-                Post <i className="fas fa-paper-plane"></i>
-              </button>
-            </form>
+            
           </div>
         </Modal.Body>
       </Modal>
 
+       {/* Ask Question Modal */}
+       <Modal show={addQuestionShow} size="lg" onHide={handleQuestionClose}>
+                <Modal.Header closeButton>
+                    <Modal.Title>Ask Question </Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    <form onSubmit={handleSaveQuestion} >
+                        <div className="mb-3">
+                            <label htmlFor="exampleInputEmail1" className="form-label">
+                                Question Title
+                            </label>
+                            <input  value={createMessage.title} name="title" onChange={handleMessageChange} type="text" className="form-control" />
+                        </div>
+                        <div className="mb-3">
+                            <label htmlFor="exampleInputPassword1" className="form-label">
+                                Question Message
+                            </label>
+                            <textarea  value={createMessage.message} name="message" onChange={handleMessageChange} className="form-control" cols="30" rows="10"></textarea>
+                        </div>
+                        <button type="button" className="btn btn-secondary me-2" onClick={handleQuestionClose}>
+                            <i className="fas fa-arrow-left"></i> Close
+                        </button>
+                        <button type="submit" className="btn btn-primary">
+                        Send Message <i className="fas fa-check-circle"></i>
+                        </button>
+                    </form>
+                </Modal.Body>
+            </Modal>
+            
+        
       <BaseFooter />
     </>
   );
