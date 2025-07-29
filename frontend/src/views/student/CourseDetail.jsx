@@ -1,4 +1,4 @@
-import React, { useState, useEffect, use } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import BaseHeader from "../partials/BaseHeader";
 import BaseFooter from "../partials/BaseFooter";
 import Sidebar from "./Partials/Sidebar";
@@ -12,6 +12,7 @@ import useAxios from "../../utils/useAxios";
 import UserData from "../plugin/UserData";
 import { useParams } from "react-router-dom";
 import Toast from "../plugin/Toast";
+import moment from "moment"
 
 
 function CourseDetail() {
@@ -29,8 +30,8 @@ function CourseDetail() {
     title: "",
     message: "",
   });
-  const [ question, setQuestion ] = useState([])
-
+  const [questions, setQuestions] = useState([]);
+  const [selectedConversation, setSelectedConversation] = useState(null);
 
 
 
@@ -57,11 +58,15 @@ function CourseDetail() {
 
   const [ConversationShow, setConversationShow] = useState(false);
   const handleConversationClose = () => setConversationShow(false);
-  const handleConversationShow = () => {
+  const handleConversationShow = (conversation) => {
     setConversationShow(true);
+    setSelectedConversation(conversation);
   };
 
+  
+
   const param = useParams();
+  const lastElementRef = useRef();
   // console.log("enrollment_id", param.enrollment_id);
 
   const [addQuestionShow, setAddQuestionShow] = useState(false);
@@ -75,6 +80,7 @@ function CourseDetail() {
       )
       .then((res) => {
         setCourse(res.data);
+        setQuestions(res.data.question_answer);
         const percentageCompleted =
           (res.data.completed_lesson?.length / res.data.lectures?.length) * 100;
         setCompletionPercentage(percentageCompleted.toFixed(0));
@@ -85,7 +91,8 @@ function CourseDetail() {
   useEffect(() => {
     fetchCourseDetail();
   }, []);
-  //console.log("variant_item", variantItem?.file);
+  console.log("Course", course);
+  console.log("selectedConversation", selectedConversation?.title);
 
   const handleMarkLessonAsCompleted = (variantItemId) => {
     const key = `lecture_${variantItemId}`;
@@ -137,7 +144,7 @@ function CourseDetail() {
     }
   };
 
-  console.log('seletedNote', selectedNote?.title);
+  //console.log('seletedNote', selectedNote?.title);
   const handleSubmitEditNote = (e,noteID) => {
     e.preventDefault();
     const formdata = new FormData();
@@ -201,6 +208,28 @@ function CourseDetail() {
         });
       });
   };
+
+  const sendNewMessage = async (e) => {
+      e.preventDefault();
+      const formdata = new FormData();
+      formdata.append("course_id", course.course?.id);
+      formdata.append("user_id", UserData()?.user_id);
+      formdata.append("message", createMessage.message);
+      formdata.append("qa_id", selectedConversation?.qa_id);
+
+      await useAxios.post(`student/question-answer-message-create/`,formdata)
+      .then((res)=>{
+        setSelectedConversation(res.data.question)
+      })
+
+  };
+
+  useEffect(()=>{
+    if(lastElementRef.current) {
+      lastElementRef.current.scrollIntoView({ behavior: "smooth" });
+    }
+  },[selectedConversation]);
+
   
 
  
@@ -522,7 +551,7 @@ function CourseDetail() {
                                 <div className="card-body p-0 pt-3">
                                   {/* Note item start */}
                                   {course?.note?.map((n,index)=>(
-                                     <div className="row g-4 p-3">
+                                     <div key={index} className="row g-4 p-3">
                                      <div className="col-sm-11 col-xl-11 shadow p-3 m-3 rounded">
                                        <h5>
                                          {n.title}
@@ -600,14 +629,15 @@ function CourseDetail() {
                                 <div className="card-body p-0 pt-3">
                                   <div className="vstack gap-3 p-3">
                                     {/* Question item START */}
-                                    <div className="shadow rounded-3 p-3">
+                                    {questions?.map((q,index)=>(
+                                      <div key={index} className="shadow rounded-3 p-3">
                                       <div className="d-sm-flex justify-content-sm-between mb-3">
                                         <div className="d-flex align-items-center">
                                           <div className="avatar avatar-sm flex-shrink-0">
                                             <img
-                                              src="https://geeksui.codescandy.com/geeks/assets/images/avatar/avatar-3.jpg"
+                                              src={q.profile.image}
                                               className="avatar-img rounded-circle"
-                                              alt="avatar"
+                                              alt="profile picture"
                                               style={{
                                                 width: "60px",
                                                 height: "60px",
@@ -622,22 +652,24 @@ function CourseDetail() {
                                                 href="#"
                                                 className="text-decoration-none text-dark"
                                               >
-                                                Angelina Poi
+                                                {q.profile.full_name}
                                               </a>
                                             </h6>
-                                            <small>Asked 10 Hours ago</small>
+                                            <small>{moment(q.date).format("DD MMM, YYYY")}</small>
                                           </div>
                                         </div>
                                       </div>
-                                      <h5>How can i fix this bug?</h5>
+                                      <h5>{q.title}</h5>
                                       <button
                                         className="btn btn-primary btn-sm mb-3 mt-3"
-                                        onClick={handleConversationShow}
+                                        onClick={() => handleConversationShow(q)}
                                       >
                                         Join Conversation{" "}
                                         <i className="fas fa-arrow-right"></i>
                                       </button>
                                     </div>
+                                    ))}
+                                    
                                   </div>
                                 </div>
                               </div>
@@ -762,82 +794,54 @@ function CourseDetail() {
                 </Modal.Body>
             </Modal>
 
-      {/* Conversation */}
-      <Modal show={ConversationShow} size="lg" onHide={handleConversationClose}>
-        <Modal.Header closeButton>
-          <Modal.Title>Lesson: 123</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <div className="border p-2 p-sm-4 rounded-3">
-            <ul
-              className="list-unstyled mb-0"
-              style={{ overflowY: "scroll", height: "500px" }}
-            >
-              <li className="comment-item mb-3">
-                <div className="d-flex">
-                  <div className="avatar avatar-sm flex-shrink-0">
-                    <a href="#">
-                      <img
-                        className="avatar-img rounded-circle"
-                        src="https://geeksui.codescandy.com/geeks/assets/images/avatar/avatar-3.jpg"
-                        style={{
-                          width: "40px",
-                          height: "40px",
-                          borderRadius: "50%",
-                          objectFit: "cover",
-                        }}
-                        alt="womans image"
-                      />
-                    </a>
-                  </div>
-                  <div className="ms-2">
-                    {/* Comment by */}
-                    <div className="bg-light p-3 rounded w-100">
-                      <div className="d-flex w-100 justify-content-center">
-                        <div className="me-2 ">
-                          <h6 className="mb-1 lead fw-bold">
-                            <a
-                              href="#!"
-                              className="text-decoration-none text-dark"
-                            >
-                              {" "}
-                              Louis Ferguson{" "}
-                            </a>
-                            <br />
-                            <span style={{ fontSize: "12px", color: "gray" }}>
-                              5hrs Ago
-                            </span>
-                          </h6>
-                          <p className="mb-0 mt-3  ">
-                            Removed demands expense account
-                          </p>
-                        </div>
-                      </div>
+       {/* Conversation Modal */}
+       <Modal show={ConversationShow} size="lg" onHide={handleConversationClose}>
+                <Modal.Header closeButton>
+                    <Modal.Title>Lesson: {selectedConversation?.title}</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    <div className="border p-2 p-sm-4 rounded-3">
+                        <ul className="list-unstyled mb-0" style={{ overflowY: "scroll", height: "500px" }}>
+                            {selectedConversation?.messages?.map((m, index) => (
+                                <li key={index} className="comment-item mb-3">
+                                    <div className="d-flex">
+                                        <div className="ms-2">
+                                            {/* Comment by */}
+                                            <div className="bg-light p-3 rounded w-100">
+                                                <div className="d-flex w-100 justify-content-center">
+                                                  
+                                                    <div className="me-2 ">
+                                                        <h6 className="mb-1 lead fw-bold">
+                                                            <a href="#!" className="text-decoration-none text-dark">
+                                                                {" "}
+                                                                {m.profile.full_name}{" "}
+                                                            </a>
+                                                            <br />
+                                                            <span style={{ fontSize: "12px", color: "gray" }}>{moment(m.date).format("DD MMM, YYYY")}</span>
+                                                        </h6>
+                                                        <p className="mb-0 mt-3  ">{m.message}</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </li>
+                            ))}
+
+                            <div ref={lastElementRef}></div>
+                        </ul>
+
+                        <form class="w-100 d-flex" onSubmit={sendNewMessage}>
+                            <textarea name="message" class="one form-control pe-4 bg-light w-75" id="autoheighttextarea" rows="2" onChange={handleMessageChange} placeholder="What's your question?"></textarea>
+                            <button class="btn btn-primary ms-2 mb-0 w-25" type="submit">
+                                Post <i className="fas fa-paper-plane"></i>
+                            </button>
+                        </form>
+
                     </div>
-                  </div>
-                </div>
-              </li>
+                </Modal.Body>
+            </Modal>
 
-           
-            </ul>
-
-            <form class="w-100 d-flex">
-              <textarea
-                name="message"
-                class="one form-control pe-4 bg-light w-75"
-                id="autoheighttextarea"
-                rows="2"
-                placeholder="What's your question?"
-              ></textarea>
-              <button class="btn btn-primary ms-2 mb-0 w-25" type="button">
-                Post <i className="fas fa-paper-plane"></i>
-              </button>
-            </form>
-
-            
-          </div>
-        </Modal.Body>
-      </Modal>
 
        {/* Ask Question Modal */}
        <Modal show={addQuestionShow} size="lg" onHide={handleQuestionClose}>
