@@ -13,7 +13,7 @@ import CreateNewPassword from './views/auth/CreateNewPassword';
 import CourseDetail from './views/base/CourseDetail';
 import apiInstance from './utils/axios';
 import CartId from './views/plugin/CartId';
-import { CartContext } from './views/plugin/Context';
+import { CartContext, ProfileContext } from './views/plugin/Context';
 import Cart from './views/base/Cart';
 import Checkout from './views/base/Checkout';
 import Success from './views/base/Success';
@@ -23,6 +23,9 @@ import StudentDashboard from './views/student/Dashboard';
 import StudentCourses from './views/student/Courses';
 import StudentCourseDetail from './views/student/CourseDetail';
 import StudentWishlist from './views/student/Wishlist';
+import StudentProfile from './views/student/Profile';
+import useAxios from './utils/useAxios';
+import UserData from './views/plugin/UserData';
 function App() {
 
  const [cartCount, setCartCount] = useState(0);
@@ -37,12 +40,21 @@ function App() {
       setCartCount(0); // fallback
     });
 };
+const fetchProfile = () => {
+  useAxios.get(`user/profile/${UserData()?.user_id}/`)
+  .then((res)=>{
+    setProfile(res.data);
+  });
+};
+
 useEffect(() => {
   fetchCartCount();
+  fetchProfile();
 }, []);
 
   return (
     <CartContext.Provider value={[cartCount,setCartCount]}>
+      <ProfileContext.Provider value={[profile,setProfile]}>
       <BrowserRouter>
         <MainWrapper>
           <Routes>
@@ -69,6 +81,7 @@ useEffect(() => {
             <Route path='/student/courses/' element={ < StudentCourses/>} />
             <Route path='/student/courses/:enrollment_id/' element={< StudentCourseDetail />} />
             <Route path='/student/wishlist/' element={< StudentWishlist />} />
+            <Route path='/student/profile' element={<StudentProfile/>} />
 
 
 
@@ -76,6 +89,7 @@ useEffect(() => {
         </MainWrapper>
       
       </BrowserRouter>
+      </ProfileContext.Provider>
     </CartContext.Provider>
       
   )
