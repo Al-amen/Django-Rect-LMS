@@ -1,11 +1,95 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import Sidebar from './Partials/Sidebar'
 import Header from './Partials/Header'
+import Rater from 'react-rater'
 
+import "react-rater/lib/react-rater.css";
 import BaseHeader from '../partials/BaseHeader'
 import BaseFooter from '../partials/BaseFooter'
+import useAxios from '../../utils/useAxios'
+import { teacherId } from '../../utils/contants'
+import Toast from '../plugin/Toast'
+
+import moment from 'moment'
 
 function Review() {
+    const [reviews, setReviews] = useState([]);
+    const [reply,setReply] = useState("");
+    const [filteredReviews,setFilteredReview] = useState([]);
+
+
+
+
+    const fetchReviewData = () => {
+        useAxios.get(`teacher/review-lists/${teacherId}/`).then((res)=>{
+            console.log(res.data);
+            setReviews(res.data);
+            setFilteredReview(res.data);
+        });
+    };
+
+    useEffect(()=>{
+        fetchReviewData();
+    },[]);
+
+    const handleSubmitReply = async (reviewId) => {
+        try {
+            await useAxios.patch(`teacher/review-detail/${teacherId}/${reviewId}/`,{
+                reply : reply,
+            })
+            .then((res)=>{
+                console.log(res.data);
+                fetchReviewData();
+                Toast().fire({
+                    icon:"success",
+                    title:"Reply sent.",
+                });
+                setReply("");
+            })
+        } catch (error) {
+            console.log(error);
+        }
+    } ;
+
+    const handleSortByDate = (e) => {
+        const sortValue = e.target.value;
+
+        let sortedReview = [...filterReviews];
+        if(sortValue === "Newest") {
+            sortedReview.sort((a,b) => new Date(b.date) - new Date(a.date)
+        )} else{
+            sortedReview.sort((a,b)=> {
+                new Date(a.date) - new Date(b.date)
+            });
+        }
+        setFilteredReview(sortedReview);
+    };
+
+    const handleSortByRatingChange = (e) => {
+        const rating = parseInt(e.target.value);
+        console.log(rating);
+        if(rating === 0) {
+            fetchReviewData();
+        }else {
+            const filtered = reviews.filter((review)=>{
+               return review.rating === rating
+            });
+            setFilteredReview(filtered);
+        }
+    }
+
+    const handleFilterByCourse = (e) => {
+        const query = e.target.value.toLowerCase();
+        if(query === "") {
+            fetchReviewData();
+        } else {
+            const filtered = reviews.filter((review)=>{
+                return review.course.title.toLowerCase().includes(query);
+            });
+            setFilteredReview(filtered);
+        }
+    };
+
     return (
         <>
             <BaseHeader />
@@ -32,22 +116,11 @@ function Review() {
                                     {/* Form */}
                                     <form className="row mb-4 gx-2">
                                         <div className="col-xl-7 col-lg-6 col-md-4 col-12 mb-2 mb-lg-0">
-                                            <select className="form-select">
-                                                <option value="">ALL</option>
-                                                <option value="How to easily create a website">
-                                                    How to easily create a website
-                                                </option>
-                                                <option value="Grunt: The JavaScript Task...">
-                                                    Grunt: The JavaScript Task...
-                                                </option>
-                                                <option value="Vue js: The JavaScript Task...">
-                                                    Vue js: The JavaScript Task...
-                                                </option>
-                                            </select>
+                                        <input type="text" className="form-control" placeholder="Search By Couse" onChange={handleFilterByCourse} />
                                         </div>
                                         <div className="col-xl-2 col-lg-2 col-md-4 col-12 mb-2 mb-lg-0">
                                             {/* Custom select */}
-                                            <select className="form-select">
+                                            <select className="form-select" onChange={handleSortByRatingChange}>
                                                 <option value="">Rating</option>
                                                 <option value={1}>1</option>
                                                 <option value={2}>2</option>
@@ -58,7 +131,7 @@ function Review() {
                                         </div>
                                         <div className="col-xl-3 col-lg-3 col-md-4 col-12 mb-2 mb-lg-0">
                                             {/* Custom select */}
-                                            <select className="form-select">
+                                            <select className="form-select" onChange={handleSortByDate}>
                                                 <option value="">Sort by</option>
                                                 <option value="Newest">Newest</option>
                                                 <option value="Oldest">Oldest</option>
@@ -68,75 +141,78 @@ function Review() {
                                     {/* List group */}
                                     <ul className="list-group list-group-flush">
                                         {/* List group item */}
-                                        <li className="list-group-item p-4 shadow rounded-3">
-                                            <div className="d-flex">
-                                                <img
-                                                    src="https://geeksui.codescandy.com/geeks/assets/images/avatar/avatar-1.jpg"
-                                                    alt="avatar"
-                                                    className="rounded-circle avatar-lg"
-                                                    style={{ width: "70px", height: "70px", borderRadius: "50%", objectFit: "cover" }}
-                                                />
-                                                <div className="ms-3 mt-2">
-                                                    <div className="d-flex align-items-center justify-content-between">
-                                                        <div>
-                                                            <h4 className="mb-0">Eleanor Pena</h4>
-                                                            <span>2 hour ago</span>
-                                                        </div>
-                                                        <div>
-                                                            <a
-                                                                href="#"
-                                                                data-bs-toggle="tooltip"
-                                                                data-placement="top"
-                                                                title="Report Abuse"
-                                                            >
-                                                                <i className="fe fe-flag" />
-                                                            </a>
-                                                        </div>
-                                                    </div>
-                                                    <div className="mt-2">
-                                                        <span className="fs-6 me-1 align-top">
-                                                            <i className='fas fa-star text-warning'></i>
-                                                            <i className='fas fa-star text-warning'></i>
-                                                            <i className='fas fa-star text-warning'></i>
-                                                            <i className='fas fa-star text-warning'></i>
-                                                            <i className='fas fa-star text-warning'></i>
-                                                        </span>
-                                                        <span className="me-1">for</span>
-                                                        <span className="h5">
-                                                            Learn React For Beginners
-                                                        </span>
-                                                        <p className="mt-2">
-                                                            <span className='fw-bold me-2'>Review <i className='fas fa-arrow-right'></i></span>
-                                                            The course is very interesting and insightful. I think it
-                                                            should have more downloadable resources  downloadable resources
-                                                        </p>
-                                                        <p className="mt-2">
-                                                            <span className='fw-bold me-2'>Response <i className='fas fa-arrow-right'></i></span>
-                                                            Thanks for the review!
-                                                        </p>
-                                                        <p>
-                                                            <button class="btn btn-outline-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#collapseExample" aria-expanded="false" aria-controls="collapseExample">
-                                                                Send Response
-                                                            </button>
-                                                        </p>
-                                                        <div class="collapse" id="collapseExample">
-                                                            <div class="card card-body">
-                                                                <form>
-                                                                    <div class="mb-3">
-                                                                        <label for="exampleInputEmail1" class="form-label">Write Response</label>
-                                                                        <textarea name="" id="" cols="30" className='form-control' rows="4"></textarea>
-                                                                    </div>
-
-                                                                    <button type="submit" class="btn btn-primary">Send Response <i className='fas fa-paper-plane'> </i></button>
-                                                                </form>
+                                        {filteredReviews?.map((r, index) => (
+                                            <li className="list-group-item p-4 shadow rounded-3 mb-4">
+                                                <div className="d-flex">
+                                                    <img
+                                                        src={r.profile.image}
+                                                        alt="avatar"
+                                                        className="rounded-circle avatar-lg"
+                                                        style={{
+                                                            width: "70px",
+                                                            height: "70px",
+                                                            borderRadius: "50%",
+                                                            objectFit: "cover",
+                                                        }}
+                                                    />
+                                                    <div className="ms-3 mt-2">
+                                                        <div className="d-flex align-items-center justify-content-between">
+                                                            <div>
+                                                                <h4 className="mb-0">{r.profile.full_name}</h4>
+                                                                <span>{moment(r.date).format("DD MMM, YYYY")}</span>
+                                                            </div>
+                                                            <div>
+                                                                <a href="#" data-bs-toggle="tooltip" data-placement="top" title="Report Abuse">
+                                                                    <i className="fe fe-flag" />
+                                                                </a>
                                                             </div>
                                                         </div>
+                                                        <div className="mt-2">
+                                                            <span className="fs-6 me-1 align-top">
+                                                                <Rater total={5} rating={r.rating || 0} />
+                                                            </span>
+                                                            <span className="me-1">for</span>
+                                                            <span className="h5">{r.course?.title}</span>
+                                                            <p className="mt-2">
+                                                                <span className="fw-bold me-2">
+                                                                    Review <i className="fas fa-arrow-right"></i>
+                                                                </span>
+                                                                {r.review}
+                                                            </p>
+                                                            <p className="mt-2">
+                                                                <span className="fw-bold me-2">
+                                                                    Response <i className="fas fa-arrow-right"></i>
+                                                                </span>
+                                                                {r.reply || "No Reply"}
+                                                            </p>
+                                                            <p>
+                                                                <button class="btn btn-outline-secondary" type="button" data-bs-toggle="collapse" data-bs-target={`#collapse${r.id}`} aria-expanded="false" aria-controls={`collapse${r.id}`}>
+                                                                    Send Response
+                                                                </button>
+                                                            </p>
+                                                            <div class="collapse" id={`collapse${r.id}`}>
+                                                                <div class="card card-body">
+                                                                    <div>
+                                                                        <div class="mb-3">
+                                                                            <label for="exampleInputEmail1" class="form-label">
+                                                                                Write Response
+                                                                            </label>
+                                                                            <textarea name="" id="" cols="30" className="form-control" rows="4" value={reply} onChange={(e) => setReply(e.target.value)}></textarea>
+                                                                        </div>
 
+                                                                        <button type="submit" class="btn btn-primary" onClick={() => handleSubmitReply(r.id)}>
+                                                                            Send Response <i className="fas fa-paper-plane"> </i>
+                                                                        </button>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
                                                     </div>
                                                 </div>
-                                            </div>
-                                        </li>
+                                            </li>
+                                        ))}
 
+                                        {filteredReviews?.length < 1 && <p className="mt-4 p-3">No reviews</p>}
                                     </ul>
                                 </div>
                             </div>

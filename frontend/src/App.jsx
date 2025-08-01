@@ -28,6 +28,7 @@ import useAxios from './utils/useAxios';
 import UserData from './views/plugin/UserData';
 import Dashoard from "./views/instructor/Dashboard";
 import Courses from "./views/instructor/Courses"
+import Review from './views/instructor/Review';
 function App() {
 
  const [cartCount, setCartCount] = useState(0);
@@ -89,6 +90,7 @@ useEffect(() => {
 
             <Route path='/instructor/dashboard/' element={<Dashoard/>} />
             <Route path='/instructor/courses/' element={<Courses/>} />
+            <Route path='/instructor/reviews/' element={<Review/>} />
 
 
 
