@@ -136,7 +136,7 @@ function Dashboard() {
                                         </thead>
                                         <tbody>
                                             {courses?.map((c,index)=>(
-                                                  <tr key={index}>
+                                              <tr key={index}>
                                                   <td>
                                                       <div className="d-flex align-items-center">
                                                           <div>

@@ -1,11 +1,44 @@
-import React from 'react'
+import {React, useState}from 'react'
 import Sidebar from './Partials/Sidebar'
 import Header from './Partials/Header'
 
 import BaseHeader from '../partials/BaseHeader'
 import BaseFooter from '../partials/BaseFooter'
+import useAxios from '../../utils/useAxios'
+import UserData from '../plugin/UserData'
+import moment from 'moment'
+
 
 function Courses() {
+    
+    const [courses, setCourses] = useState([]);
+
+    const fetchCourseData = () => {
+        
+        useAxios.get(`teacher/course-lists/${UserData()?.teacher_id}/`).then((res)=>{
+            console.log(res.data);
+            setCourses(res.data);
+        })
+
+           
+    };
+    useState(() => {
+        fetchCourseData();
+    }, []);
+
+    const handleSearch = (event) => {
+        const query = event.target.value.toLowerCase();
+        console.log('query',query);
+        if(query === "") {
+            fetchCourseData();
+        }else {
+            const filtered = courses.filter((c)=>{
+                return c.title.toLowerCase().includes(query);
+            });
+            setCourses(filtered);
+        }
+    }
+    
     return (
         <>
             <BaseHeader />
@@ -34,6 +67,7 @@ function Courses() {
                                                 type="search"
                                                 className="form-control"
                                                 placeholder="Search Your Courses"
+                                                onChange={handleSearch }
                                             />
                                         </div>
                                     </form>
@@ -52,99 +86,56 @@ function Courses() {
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            <tr>
-                                                <td>
-                                                    <div className="d-flex align-items-center">
-                                                        <div>
-                                                            <a href="#">
-                                                                <img src="https://geeksui.codescandy.com/geeks/assets/images/course/course-python.jpg" alt="course" className="rounded img-4by3-lg" style={{ width: "100px", height: "70px", borderRadius: "50%", objectFit: "cover" }} />
-                                                            </a>
-                                                        </div>
-                                                        <div className="ms-3">
-                                                            <h4 className="mb-1 h6">
-                                                                <a href="#" className="text-inherit text-decoration-none text-dark">
-                                                                    Create a Website with WordPress
+                                           {courses?.map((c,index)=>(
+                                                <tr key={index}>
+                                                    <td>
+                                                        <div className="d-flex align-items-center">
+                                                            <div>
+                                                                <a href="#">
+                                                                    <img src= {c.image} alt="course" className="rounded img-4by3-lg" style={{ width: "100px", height: "70px", borderRadius: "50%", objectFit: "cover" }} />
                                                                 </a>
-                                                            </h4>
-                                                            <ul className="list-inline fs-6 mb-0">
-                                                                <li className="list-inline-item">
-                                                                    <small><i className='bi bi-clock-history'></i>
-                                                                        <span className='ms-1'>1hr 30 Mins</span>
-                                                                    </small>
-                                                                </li>
-                                                                <li className="list-inline-item">
-                                                                    <small>
-                                                                        <i className='bi bi-reception-4'></i>
-                                                                        <span className='ms-1'>Beginner</span>
-                                                                    </small>
-                                                                </li>
-                                                                <li className="list-inline-item">
-                                                                    <small>
-                                                                        <i className='fas fa-dollar-sign'></i>
-                                                                        <span>30.99</span>
-                                                                    </small>
-                                                                </li>
-                                                            </ul>
+                                                            </div>
+                                                            <div className="ms-3">
+                                                                <h4 className="mb-1 h6">
+                                                                    <a href="#" className="text-inherit text-decoration-none text-dark">
+                                                                        {c.title}
+                                                                    </a>
+                                                                </h4>
+                                                                <ul className="list-inline fs-6 mb-0">
+                                                                    <li className="list-inline-item">
+                                                                        <small><i className='fas fa-user'></i>
+                                                                            <span className='ms-1'>{c.language}</span>
+                                                                        </small>
+                                                                    </li>
+                                                                    <li className="list-inline-item">
+                                                                        <small>
+                                                                            <i className='bi bi-reception-4'></i>
+                                                                            <span className='ms-1'>{c.level}</span>
+                                                                        </small>
+                                                                    </li>
+                                                                    <li className="list-inline-item">
+                                                                        <small>
+                                                                            <i className='fas fa-dollar-sign'></i>
+                                                                            <span>${c.price}</span>
+                                                                        </small>
+                                                                    </li>
+                                                                </ul>
+                                                            </div>
                                                         </div>
-                                                    </div>
-                                                </td>
-                                                <td><p className='mt-3'>71</p></td>
-                                                <td><p className='mt-3 badge bg-success' >Intermediate</p></td>
-                                                <td><p className='mt-3 badge bg-warning text-dark' >Intermediate</p></td>
-                                                <td><p className='mt-3'>07 Aug, 2025</p></td>
-                                                <td>
-                                                    <button className='btn btn-primary btn-sm mt-3 me-1'><i className='fas fa-edit'></i></button>
-                                                    <button className='btn btn-danger btn-sm mt-3 me-1'><i className='fas fa-trash'></i></button>
-                                                    <button className='btn btn-secondary btn-sm mt-3 me-1'><i className='fas fa-eye'></i></button>
-                                                </td>
-                                            </tr>
+                                                    </td>
+                                                    <td><p className='mt-3 text-center'>{c.students?.length}</p></td>
+                                                    <td><p className='mt-3 text-center badge bg-success' >{c.level}</p></td>
+                                                    {/* <td><p className='mt-3 badge bg-warning text-dark' >Intermediate</p></td> */}
+                                                    <td><p className='mt-3 text-center'>{ moment(c.date).format("DD MMM, YYYY" ) }</p></td>
+                                                    <td>
+                                                        <button className='btn btn-primary btn-sm mt-3 me-1'><i className='fas fa-edit'></i></button>
+                                                        <button className='btn btn-danger btn-sm mt-3 me-1'><i className='fas fa-trash'></i></button>
+                                                        <button className='btn btn-secondary btn-sm mt-3 me-1'><i className='fas fa-eye'></i></button>
+                                                    </td>
+                                                </tr>
+                                            ))}
 
-                                            <tr>
-                                                <td>
-                                                    <div className="d-flex align-items-center">
-                                                        <div>
-                                                            <a href="#">
-                                                                <img src="https://geeksui.codescandy.com/geeks/assets/images/course/course-react.jpg" alt="course" className="rounded img-4by3-lg" style={{ width: "100px", height: "70px", borderRadius: "50%", objectFit: "cover" }} />
-                                                            </a>
-                                                        </div>
-                                                        <div className="ms-3">
-                                                            <h4 className="mb-1 h6">
-                                                                <a href="#" className="text-inherit text-decoration-none text-dark">
-                                                                    Create a Website with WordPress
-                                                                </a>
-                                                            </h4>
-                                                            <ul className="list-inline fs-6 mb-0">
-                                                                <li className="list-inline-item">
-                                                                    <small><i className='bi bi-clock-history'></i>
-                                                                        <span className='ms-1'>1hr 30 Mins</span>
-                                                                    </small>
-                                                                </li>
-                                                                <li className="list-inline-item">
-                                                                    <small>
-                                                                        <i className='bi bi-reception-4'></i>
-                                                                        <span className='ms-1'>Beginner</span>
-                                                                    </small>
-                                                                </li>
-                                                                <li className="list-inline-item">
-                                                                    <small>
-                                                                        <i className='fas fa-dollar-sign'></i>
-                                                                        <span>30.99</span>
-                                                                    </small>
-                                                                </li>
-                                                            </ul>
-                                                        </div>
-                                                    </div>
-                                                </td>
-                                                <td><p className='mt-3'>71</p></td>
-                                                <td><p className='mt-3 badge bg-success' >Intermediate</p></td>
-                                                <td><p className='mt-3 badge bg-warning text-dark' >Intermediate</p></td>
-                                                <td><p className='mt-3'>07 Aug, 2025</p></td>
-                                                <td>
-                                                    <button className='btn btn-primary btn-sm mt-3 me-1'><i className='fas fa-edit'></i></button>
-                                                    <button className='btn btn-danger btn-sm mt-3 me-1'><i className='fas fa-trash'></i></button>
-                                                    <button className='btn btn-secondary btn-sm mt-3 me-1'><i className='fas fa-eye'></i></button>
-                                                </td>
-                                            </tr>
+                                            
                                         </tbody>
                                     </table>
                                 </div>
