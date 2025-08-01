@@ -3,7 +3,17 @@ from django import forms
 
 from api import models
 
-admin.site.register(models.Teacher)
+class TeacherAdmin(admin.ModelAdmin):
+    list_display = ('id','full_name', 'country')
+    search_fields = ('full_name','country')
+   
+
+    def get_form(self, request, obj=None, **kwargs):
+        form = super().get_form(request, obj, **kwargs)
+        form.base_fields['image'].required = False
+        return form
+admin.site.register(models.Teacher, TeacherAdmin)
+
 admin.site.register(models.Category)
 admin.site.register(models.Course)
 admin.site.register(models.Variant)

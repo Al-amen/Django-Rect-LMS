@@ -26,6 +26,7 @@ import StudentWishlist from './views/student/Wishlist';
 import StudentProfile from './views/student/Profile';
 import useAxios from './utils/useAxios';
 import UserData from './views/plugin/UserData';
+import Dashoard from "./views/instructor/Dashboard";
 function App() {
 
  const [cartCount, setCartCount] = useState(0);
@@ -82,6 +83,10 @@ useEffect(() => {
             <Route path='/student/courses/:enrollment_id/' element={< StudentCourseDetail />} />
             <Route path='/student/wishlist/' element={< StudentWishlist />} />
             <Route path='/student/profile' element={<StudentProfile/>} />
+
+            {/* teacher routes */}
+
+            <Route path='instructor/dashboard' element={<Dashoard/>} />
 
 
 

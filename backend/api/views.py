@@ -27,7 +27,7 @@ from rest_framework.permissions import AllowAny,IsAuthenticated
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.response import Response
 from rest_framework.exceptions import PermissionDenied
-from rest_framework.decorators import api_view, APIView
+from rest_framework.decorators import api_view, APIView,permission_classes
 
 from rest_framework.parsers import MultiPartParser, FormParser
 from drf_yasg.utils import swagger_auto_schema
@@ -897,12 +897,12 @@ class TeacherSummaryAPIView(generics.ListAPIView):
     
 
 class TeacherCourseListAPIView(generics.ListAPIView):
-    serializer_class = api_serializer.CountrySerializer
+    serializer_class = api_serializer.CourseSerializer
     permission_classes = [AllowAny]
 
     def get_queryset(self):
         teacher_id = self.kwargs['teacher_id']
-        teacher = api_models.Teacher.objects.get(id=teacher_id)
+        teacher = api_models.Teacher.objects.filter(id=teacher_id).first()
         return api_models.Course.objects.filter(teacher=teacher, platform_status="Published", teacher_course_status="Published")
 
 class TeacherReviewListAPIView(generics.ListAPIView):
@@ -928,6 +928,8 @@ class TeacherReviewDetailAPIView(generics.RetrieveUpdateAPIView):
 
 class TeacherStudentsListAPIView(viewsets.ViewSet):
 
+    permission_classes = [AllowAny]
+
     def list(self, request, teacher_id=None):
         
         teacher = api_models.Teacher.objects.get(id=teacher_id)
@@ -951,6 +953,7 @@ class TeacherStudentsListAPIView(viewsets.ViewSet):
         return Response(students)
 
 @api_view(['GET'])
+@permission_classes([AllowAny])
 def TeacherAllMonthEarningAPIView(request, teacher_id):
     teacher = api_models.Teacher.objects.get(id=teacher_id)
     all_month_earnings = (
@@ -965,7 +968,7 @@ def TeacherAllMonthEarningAPIView(request, teacher_id):
 
 
 class TeacherBestSellingCourseAPIView(viewsets.ViewSet):
-    
+    permission_classes = [AllowAny]
     def list(self,request, teacher_id=None):
         teacher = api_models.Teacher.objects.get(id=teacher_id)
         courses_with_total_price = []
@@ -975,7 +978,7 @@ class TeacherBestSellingCourseAPIView(viewsets.ViewSet):
             revenue = course.enrolledcourse_set.aggregate(total_price=models.Sum('order_item__price'))['total_price'] or 0
             sales = course.enrolledcourse_set.count()
             courses_with_total_price.append({
-                "course_image": course.image.url,
+                "course_image": course.image.url if course.image else None,
                 "course_name": course.title,
                 "total_revenue": revenue,
                 "total_sales": sales
@@ -1051,7 +1054,8 @@ class TeacherNotificationDetailAPIView(generics.RetrieveUpdateAPIView):
         return api_models.Notification.objects.get(teacher=teacher, id=noti_id)
 
 class CourseCreateAPIView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
+  
 
     def post(self,request):
         title = request.data.get("title")
@@ -1229,10 +1233,13 @@ class CourseUpdateAPIView(generics.RetrieveUpdateAPIView):
 class TeacherCourseDetailAPIView(generics.RetrieveDestroyAPIView):
     serializer_class = api_serializer.CourseSerializer
     permission_classes = [AllowAny]
+    queryset = api_models.Course.objects.filter(platform_status="Published", teacher_course_status="Published")
+    lookup_field = 'course_id' 
 
     def get_objects(self):
-        slug = self.kwargs['slug']
-        return api_models.Course.objects.get(slug=slug)
+        course_id = self.kwargs['course_id']
+        course = api_models.Course.objects.get(course_id=course_id, platform_status="Published", teacher_course_status="Published")
+        return course
 
 class CourseVariantDeleteAPIView(generics.DestroyAPIView):
     serializer_class = api_serializer.VariantSerializer
