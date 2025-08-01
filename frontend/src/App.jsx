@@ -30,6 +30,7 @@ import Dashoard from "./views/instructor/Dashboard";
 import Courses from "./views/instructor/Courses"
 import Review from './views/instructor/Review';
 import Students from './views/instructor/Students';
+import Earning from './views/instructor/Earning';
 function App() {
 
  const [cartCount, setCartCount] = useState(0);
@@ -93,6 +94,7 @@ useEffect(() => {
             <Route path='/instructor/courses/' element={<Courses/>} />
             <Route path='/instructor/reviews/' element={<Review/>} />
             <Route path='instructor/students/' element={<Students/>} />
+            <Route path='instructor/earning/' element={<Earning/>} />
 
 
 
