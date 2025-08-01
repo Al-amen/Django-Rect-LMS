@@ -92,7 +92,7 @@ class Teacher(models.Model):
     def students(self):
         return CartOrder.objects.filter(teacher=self)
     
-    def course(self):
+    def courses(self):
         return Course.objects.filter(teacher=self)
 
     def review(self):
