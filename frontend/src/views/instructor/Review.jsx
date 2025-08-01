@@ -54,7 +54,7 @@ function Review() {
     const handleSortByDate = (e) => {
         const sortValue = e.target.value;
 
-        let sortedReview = [...filterReviews];
+        let sortedReview = [...filteredReviews];
         if(sortValue === "Newest") {
             sortedReview.sort((a,b) => new Date(b.date) - new Date(a.date)
         )} else{
