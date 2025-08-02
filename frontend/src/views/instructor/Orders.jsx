@@ -58,7 +58,7 @@ function Orders() {
                                                          </a>
                                                      </h5>
                                                  </td>
-                                                 <td>${o.price}</td>
+                                                 <td>${o.price?.toFixed(2)}</td>
                                                  <td>#{o.order.oid}</td>
                                                  <td>{moment(o.date).format("DD MMM, YYYY")}</td>
                                              </tr>

@@ -31,7 +31,10 @@ function Sidebar() {
                                 <Link className="nav-link " to={`/instructor/earning/`}> <i className='fas fa-dollar-sign me-2'></i>Earning</Link>
                             </li>
                             <li className="nav-item">
-                                <Link className="nav-link" to={`/instructor/quiz/`}><i className='fas fa-question-circle me-2'></i>Quiz </Link>
+                                <Link className="nav-link" to={`/instructor/coupon/`}><i className='fas fa-tag me-2'></i>Coupons </Link>
+                            </li>
+                            <li className="nav-item">
+                                <Link className="nav-link" to={`/instructor/notifications/`}><i className='fas fa-bell me-2'></i>Notifications </Link>
                             </li>
                             <li className="nav-item">
                                 <Link className="nav-link" to={`/instructor/orders/`}>  <i className='fas fa-shopping-cart me-2'></i> Orders </Link>
