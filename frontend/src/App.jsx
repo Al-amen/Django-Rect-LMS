@@ -34,6 +34,7 @@ import Earning from './views/instructor/Earning';
 import Orders from './views/instructor/Orders';
 import Coupon from './views/instructor/Coupon';
 import TeacherNotification from './views/instructor/TeacherNotification';
+import QA from './views/instructor/QA';
 function App() {
 
  const [cartCount, setCartCount] = useState(0);
@@ -101,6 +102,8 @@ useEffect(() => {
             <Route path='instructor/orders/' element={<Orders/>} />
             <Route path='instructor/coupon/' element={<Coupon/>} />
             <Route path='instructor/notifications/' element={< TeacherNotification />} />
+            <Route path='instructor/question-answer/' element={< QA />} />
+
             
 
             
