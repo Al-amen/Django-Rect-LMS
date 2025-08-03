@@ -1,11 +1,51 @@
-import React from 'react'
+import {React,useState} from 'react'
 import BaseHeader from '../partials/BaseHeader'
 import BaseFooter from '../partials/BaseFooter'
 import Sidebar from './Partials/Sidebar'
 import Header from './Partials/Header'
+import useAxios from '../../utils/useAxios'
+import UserData from '../plugin/UserData'
+import Toast from '../plugin/Toast'
 
 
 function ChangePassword() {
+
+    const [password, setPassword] = useState({
+        old_password: "",
+        new_password:"",
+        confirm_new_password:"",
+    });
+    const handlePasswordChange = (event) => {
+        setPassword({
+            ...password,
+            [event.target.name]: event.target.value,
+        });
+    };
+
+    console.log(password)
+
+    const changePasswordSubmit = async (e) => {
+        e.preventDefault();
+
+        if(password.confirm_new_password != password.new_password) {
+            Toast().fire({
+                icon:"error",
+                title:"Password does not match",
+            });
+        }
+        const formdata = new FormData();
+        formdata.append('user_id',UserData()?.teacher_id);
+        formdata.append('old_password',password.old_password);
+        formdata.append('new_password',password.new_password);
+
+        await useAxios.post(`user/change-password/`,formdata).then((res)=>{
+            console.log(res.data);
+            Toast().fire({
+                icon:res.data.icon,
+                title: res.data.message,
+            });
+        });
+    };
     return (
         <>
             <BaseHeader />
@@ -27,7 +67,7 @@ function ChangePassword() {
                                 {/* Card body */}
                                 <div className="card-body">
                                     <div>
-                                        <form className="row gx-3 needs-validation" noValidate="">
+                                        <form onSubmit={changePasswordSubmit}  className="row gx-3 needs-validation" noValidate="">
                                             {/* First name */}
                                             <div className="mb-3 col-12 col-md-12">
                                                 <label className="form-label" htmlFor="fname">
@@ -39,6 +79,9 @@ function ChangePassword() {
                                                     className="form-control"
                                                     placeholder="**************"
                                                     required=""
+                                                    name="old_password"
+                                                    value={password.old_password}
+                                                    onChange={handlePasswordChange}
                                                 />
                                             </div>
                                             {/* Last name */}
@@ -52,6 +95,9 @@ function ChangePassword() {
                                                     className="form-control"
                                                     placeholder="**************"
                                                     required=""
+                                                    name='new_password'
+                                                    value={password.new_password}
+                                                    onChange={handlePasswordChange}
                                                 />
                                             </div>
 
@@ -66,6 +112,9 @@ function ChangePassword() {
                                                     className="form-control"
                                                     placeholder="**************"
                                                     required=""
+                                                    name='confirm_new_password'
+                                                    value={password.confirm_new_password}
+                                                    onChange={handlePasswordChange}
                                                 />
                                                 <div className="invalid-feedback">Please choose country.</div>
                                             </div>
